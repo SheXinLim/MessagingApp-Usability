@@ -1,0 +1,411 @@
+
+<!-- 
+    Here you'll find the main exhibit: the chat application code. Feel free to look around!
+-->
+{% extends 'base.jinja' %}
+
+
+{% block content %} 
+   <style>
+    nav {
+        border-bottom: 1px solid black;
+        overflow: auto
+    }
+
+    #tabs button {
+        padding: 10px 15px;  /* Increase padding to make buttons larger */
+        font-size: 14px;    /* Increase font size for better visibility */
+        margin-left: 10px;  /* Add some space between the buttons */
+        cursor: pointer;
+    }
+
+    #message_box {
+        border: 1px solid black; 
+        height: 400px; 
+        width: 800px; 
+        overflow: auto;
+        padding: 2px;
+    }
+
+    #friends-list {
+        position: absolute;
+        right: 0;
+        top: 100px; /* Adjust based on header height */
+        width: 200px; /* Adjust based on desired width */
+        border-left: 1px solid black;
+        height: 400px;
+        overflow: auto;
+    }
+
+    .text  {
+        margin-top: 2px;
+        margin-bottom: 2px;
+    }
+
+</style>
+
+<style>
+    #friend_request_box {
+        margin-top: 10px;
+    }
+</style>
+
+<!--Navbar, you'll see the username here-->
+<nav style="border-bottom: 1px solid black;">
+    <ol style="float: right">
+        <li style="display:inline-block">Username:  {{ username }} </li>
+        <li style="display: inline-block"><a href="{{ url_for('home') }}">Home</a></li>
+        <li style="display: inline-block"><a href="{{ url_for('friend_requests') }}">Friend Requests</a></li>
+        <li style="display: inline-block"><a href="{{ url_for('logout') }}" onclick="return confirm('Are you sure you want to log out?')">Log Out</a></li>
+    </ol>
+</nav>
+
+
+<h1>Messaging App </h1>
+
+<main>
+    <!-- The messages are displayed here -->
+    <section id="message_box"></section>
+
+    <!-- These part ideally should be a form element, 
+    but I wrote this code a year ago and I don't want to break anything...-->
+    <section id="chat_box">
+        <p class="text">Chat with: </p>
+        <input id="receiver" placeholder="username">
+        <!-- MDN says its bad practice to use the onclick attribute,
+        but we're using it anyways coz its easy :)-->
+        <button onclick="join_room()">Chat</button>
+    </section>
+
+    <!-- The (message) input box is set to display: none initially, 
+    this means the input box is "invisible" initially-->
+    <section id="input_box" style="display: none" >
+        <p class="text">Message: </p>
+        <input id="message" placeholder="message">
+        <button onclick="send()">Send</button>
+        <button onclick="leave()">Leave Room</button>
+    </section>
+
+    <!-- Section for sending friend requests -->
+    <section id="friend_request_box">
+        <p class="text">Send Friend Request to:</p>
+        <input id="friend_username" placeholder="Username">
+        <button onclick="sendFriendRequest()">Send Request</button>
+    </section>
+
+    <!-- Friends List -->
+    <section id="friends-list">
+        <h2>Friends</h2>
+        <ul>
+            {% if friends %}
+                {% for friend in friends %}
+                <li>
+                    <a href="#" onclick="startPrivateConversation('{{ friend }}')">{{ friend }}</a>
+                    <a href="#" onclick="removeFriend('{{ friend }}')">: Remove friend</a>
+                </li>
+                {% endfor %}
+            {% else %}
+                <li>No friends yet.</li>
+            {% endif %}
+        </ul>
+
+    </section>
+
+
+
+</main>
+
+<script src="/static/js/libs/socket.io.min.js"></script>
+
+{# encrypt  #}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/pbkdf2.min.js"></script>
+
+
+<script>
+    
+
+    // when the user presses the "Enter" key inside of the "message box", 
+    // the message is sent to the server
+    $("#message").on("keyup", (e) => {
+        if (e.key == "Enter") {
+            send();
+        }
+    })
+
+    // when the user presses the enter key inside of the "receiver box"
+    // the user joins a (socket) room
+     $("#receiver").on("keyup", (e) => {
+        if (e.key == "Enter") {
+            join_room();
+        }
+    })
+
+
+    $(document).ready(() => {
+        // room_id is undefined if the user hasn't joined a room
+        // we early return in this case
+        if (Cookies.get("room_id") == undefined) {
+            return;
+        }
+
+        // the user has already joined an existing room
+        // we'll display the message box, instead of the "Chat with: " box
+        $("#chat_box").hide();
+        $("#input_box").show();
+        room_id = parseInt(Cookies.get("room_id"));
+    })
+
+
+    $(document).ready(function() {
+        $.ajax({
+            url: "/get-hashed-password/{{ username }}",
+            type: "GET",
+            success: function(response) {
+                // Handle successful response
+                console.log("Hashed Password:", response.hashed_password);
+                let hashedPassword = response.hashed_password;
+
+                // Call the send function with the hashed password
+                //send(hashedPassword);
+            },
+            error: function(xhr, status, error) {
+                // Handle error
+                console.error("Error:", error);
+            }
+        });
+    }); 
+
+
+    
+    // Here's the Socket IO part of the code
+    // things get a bit complicated here so brace yourselves :P
+    let username = "{{ username }}";
+    let hashedpass = "{{ hashed_password }}";
+
+    
+
+    Cookies.set('username', username);
+
+    // initializes the socket
+    const socket = io();
+
+
+   
+
+    // we emit a join room event to the server to join a room
+    function join_room() {
+       
+        let receiver = $("#receiver").val();
+
+        // pass in the receiver of our message to the server
+        // as well as the current user's username
+        socket.emit("join", username, receiver, (res) => {
+            // res is a string with the error message if the error occurs
+            // this is a pretty bad way of doing error handling, but watevs
+            if (typeof res != "number") {
+                alert(res);
+                return;
+            }
+
+            room_id = res;
+            Cookies.set("room_id", room_id);
+
+            // now we'll show the input box, so the user can input their message
+            $("#chat_box").hide();
+            $("#input_box").show();
+        });
+     
+    }
+     
+    
+
+
+
+    function send() {
+        let message = $("#message").val();
+        $("#message").val("");
+       if (!room_id) {
+            alert("You must join a room before sending messages.");
+            return;
+       }
+        
+        socket.emit("send", username, message, room_id);  
+    }
+
+
+    socket.on("incoming", (message, color="black") => {
+       add_message(message, color);
+    });
+
+    function removeFriend(friendUsername) {
+        if (confirm(`Are you sure you want to remove ${friendUsername} from your friends list?`)) {
+
+            fetch(`/remove-friend/${friendUsername}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username: "{{ username }}" })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Response not proper');
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert(data.message); 
+                updateFriendsList();  
+            })
+            .catch((error) => {
+                console.error('Not successful:', error);
+                alert('Error');
+            });
+        }
+    }
+
+
+   
+
+
+
+    function startPrivateConversation(friendUsername) {
+        socket.emit("join", username, friendUsername, (roomId) => {
+            if (roomId !== null) {
+                room_id = roomId;
+                Cookies.set("room_id", room_id);
+                $("#chat_box").hide();
+                $("#input_box").show();
+            } else {
+                alert("Failed to start a private conversation.");
+            }
+        });
+    }
+
+
+
+    function sendPrivateMessage() {
+        let message = $("#message").val();
+        //let encryptedMessage = encryptMessage(message);
+        $("#message").val("");
+        socket.emit("private_message", username, message, room_id);  
+    }
+
+    // function when the user clicks on "Leave Room"
+    // emits a "leave" event, telling the server that we want to leave the room
+    function leave() {
+        Cookies.remove("room_id");
+        socket.emit("leave", username, room_id);
+        $("#input_box").hide();
+        $("#chat_box").show();
+    }
+
+    // function to add a message to the message box
+    // called when an incoming message has reached a client
+    function add_message(message, color) {
+        let box = $("#message_box");
+        let child = $(`<p style="color:${color}; margin: 0px;"></p>`).text(message);
+        box.append(child);
+    }
+
+    // Function to send a friend request
+    function sendFriendRequest() {
+        const friendUsername = document.getElementById('friend_username').value;
+        // Validate username on the client side
+        if (!isValidUsername(friendUsername)) {
+            alert("Invalid username. Please use only alphanumeric characters and underscores, and ensure it is less than 30 characters long.");
+            return; // Stop the function if the username is invalid
+        }
+
+        fetch('/send-friend-request', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ sender: "{{ username }}", receiver: friendUsername })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.text();
+        })
+        .then(data => {
+            alert(data);
+            document.getElementById('friend_username').value = ''; // Clear the input field
+        })
+        .catch((error) => {
+            console.error('There has been a problem with your fetch operation:', error);
+        });
+    }
+
+    function isValidUsername(username) {
+        const regex = /^\w{1,30}$/;
+        return regex.test(username);
+    }
+
+
+
+    //function to accept or decline friend request
+    function handleFriendRequest(action, requestId) {
+    fetch(`/${action}-friend-request/${requestId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify({ username: "{{ username }}" })  // Or any other data you might need
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();  // Assuming the server responds with JSON
+    })
+    .then(data => {
+        alert(data.message);  // Assuming the server responds with a JSON object that contains a message key
+    })
+    .catch((error) => {
+        console.error('There has been a problem with your fetch operation:', error);
+        alert('An error occurred.');
+    });
+}
+    
+</script>
+<script>
+    // Function to fetch and update the friends list
+    function updateFriendsList() {
+        fetch('/api/friends-list')
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.error('Error fetching friends:', data.error);
+                return;
+            }
+            const list = document.getElementById('friends-list');
+            list.innerHTML = '<h2>Friends</h2><ul>';
+            if (data.friends && data.friends.length > 0) {
+                data.friends.forEach(friend => {
+                    const list_part = document.createElement('li');
+                    list_part.innerHTML = `<a href="#" onclick="startPrivateConversation('${friend}')">${friend}</a> 
+                                        <a href="#" onclick="removeFriend('${friend}')">: Remove friend</a>`;
+                    list.appendChild(list_part);
+                });
+            } else {
+                list.innerHTML += '<li>No friends yet.</li>';
+            }
+            list.innerHTML += '</ul>';
+        })
+        .catch(error => console.error('Error fetching friends:', error));
+    }
+
+
+
+
+    // Call updateFriendsList every 5 seconds
+    setInterval(updateFriendsList, 5000);
+</script>
+
+{% endblock %}

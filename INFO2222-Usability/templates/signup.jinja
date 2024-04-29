@@ -1,0 +1,113 @@
+<!-- 
+Sign up page, pretty much the same as login.
+-->
+{% extends 'base.jinja' %}
+
+{% block content %}
+<h1>Sign Up</h1>
+<p>Username</p>
+<input id="username"/>
+<p>Password</p>
+<input id="password" type="password"/>
+<button onclick="signup()">Sign up</button>
+
+<!-- Include Crypto-JS for hashing password client-side -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
+
+<script>
+    function generateSalt(length) {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let salt = '';
+        for (let i = 0; i < length; i++) {
+            salt += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        return salt;
+    }
+    function isValidURL(string) {
+        if (string.length === 0) {
+            return false;
+        }
+        if (string[0] === "/") {
+            return true;  // Allow relative URLs
+        }
+        try {
+            new URL(string);
+            return true;  // URL is well-formed
+        } catch (_) {
+            return false;  // Malformed URL
+        }
+    }
+    
+    function validatePassword(password) {
+        if (password.length < 8) {
+                return false;
+        }
+        if (!/[a-z]/.test(password)) {
+            return false;
+        }
+        if (!/[A-Z]/.test(password)) {
+            return false;
+        }
+        if (!/[0-9]/.test(password)) {
+            return false;
+        }
+        if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+            return false;
+        }
+        return true;
+    }  
+    async function signup() {
+        let username = document.getElementById('username').value;
+        let password = document.getElementById('password').value;
+        if (!validatePassword(password)) {
+            alert("Password does not meet security requirements.");
+            return;
+        }
+
+        // Hash the password using Crypto-JS SHA256
+        let salt = generateSalt(16); // Generate a 16 character salt
+        let saltPassword = password + salt; // Append salt to password
+        let hashedPassword = CryptoJS.SHA256(saltPassword).toString();
+
+        let signupURL = "{{ url_for('signup_user') }}";
+        try {
+            let response = await axios.post(signupURL, {
+                username: username,
+                password: hashedPassword, // Send the hashed password instead of the plaintext
+                salt: salt
+            });
+
+            // Check the structure of the response to see if it's a success message or an error
+            if (response.data && response.data.redirect) {
+                // If there is a 'redirect' key in the response, navigate to that URL
+                window.location.href = response.data.redirect;
+            } else if (response.data && response.data.error) {
+                // If there is an 'error' key, show the error message
+                alert(response.data.error);
+            } else {
+                // If the response is unexpected, log it and show a default message
+                console.log('Unexpected response:', response.data);
+                alert("An unexpected error occurred.");
+            }
+        } catch (error) {
+            // Handle errors that occur during the request
+            console.error('Signup error:', error);
+            if (error.response && error.response.data) {
+                alert(error.response.data);
+            } else {
+                alert('An unknown error occurred. Please try again.');
+            }
+        }
+    }
+
+    
+
+</script>
+
+<script>
+    setTimeout(function() {
+        alert('Session timed out. You will be redirected to the homepage.');
+        window.location.href = '{{ url_for("index") }}'; // Redirect to the index page
+    }, 180000); // 180000 milliseconds = 3 minutes
+</script>
+{% endblock %}

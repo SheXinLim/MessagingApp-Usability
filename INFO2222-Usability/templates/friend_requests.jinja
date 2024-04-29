@@ -1,0 +1,128 @@
+{% extends 'base.jinja' %}
+
+{% block content %}
+<style>
+    .friend-requests-container {
+        margin: 20px;
+    }
+    ul {
+        list-style-type: none;
+        padding: 0;
+    }
+    li {
+        margin: 10px 0;
+        padding: 10px;
+        border: 1px solid #ccc;
+        background-color: #f8f8f8;
+    }
+    button {
+        margin-left: 10px;
+    }
+</style>
+
+<div class="friend-requests-container">
+    <h1>Friend Requests</h1>
+
+    <!-- Section for received friend requests -->
+    <section>
+        <h2>Received Friend Requests</h2>
+        <ul id="received-requests-list">
+            {% for request in received_requests %}
+            <li id="request-{{ request.id }}">{{ request.sender_username }}
+                <button onclick="handleFriendRequest('accept', {{ request.id }})">Accept</button>
+                <button onclick="handleFriendRequest('decline', {{ request.id }})">Decline</button>
+            </li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <!-- Section for sent friend requests -->
+    <section>
+        <h2>Sent Friend Requests</h2>
+        <ul id="sent-requests-list">
+            {% for request in sent_requests %}
+            <li id="request-{{ request.id }}">Waiting for {{ request.receiver_username }} to respond.</li>
+            {% endfor %}
+        </ul>
+    </section>
+</div>
+<script>
+    // Function to handle accepting or declining friend requests
+    function handleFriendRequest(action, requestId) {
+        const element = document.getElementById(`request-${requestId}`);
+        if (element) {
+            element.innerHTML = 'Processing...'; // Provide immediate feedback
+        }
+
+        fetch(`/${action}-friend-request/${requestId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({ requestId: requestId })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'success') {
+                element.remove(); // Remove the element if successful
+            } else {
+                alert(data.message); // Show error message from server
+                element.innerHTML = `<li>${element.textContent}
+                    <button onclick="handleFriendRequest('accept', ${requestId})">Accept</button>
+                    <button onclick="handleFriendRequest('decline', ${requestId})">Decline</button>
+                </li>`; // Restore the buttons for retry
+            }
+        })
+        .catch((error) => {
+            console.error('There has been a problem with your fetch operation:', error);
+            alert('An error occurred. The operation might not have been completed on the server.');
+            element.innerHTML = `<li>${element.textContent}
+                <button onclick="handleFriendRequest('accept', ${requestId})">Accept</button>
+                <button onclick="handleFriendRequest('decline', ${requestId})">Decline</button>
+            </li>`; // Restore the buttons for retry
+        });
+    }
+
+    // Periodic refresh function
+    function fetchFriendRequests() {
+        fetch('/api/friend-requests')
+            .then(response => response.json())
+            .then(data => {
+                updateReceivedRequests(data.received_requests);
+                updateSentRequests(data.sent_requests);
+            })
+            .catch(error => console.error('Error fetching friend requests:', error));
+    }
+    setInterval(fetchFriendRequests, 5000); // Refresh every 5 seconds
+
+    // Update functions for UI
+    function updateReceivedRequests(requests) {
+        const list = document.getElementById('received-requests-list');
+        list.innerHTML = '';
+        requests.forEach(request => {
+            list.innerHTML += `<li id="request-${request.id}">${request.sender_username}
+                <button onclick="handleFriendRequest('accept', ${request.id})">Accept</button>
+                <button onclick="handleFriendRequest('decline', ${request.id})">Decline</button>
+            </li>`;
+        });
+    }
+
+    function updateSentRequests(requests) {
+        const list = document.getElementById('sent-requests-list');
+        list.innerHTML = '';
+        requests.forEach(request => {
+            list.innerHTML += `<li id="request-${request.id}">Waiting for ${request.receiver_username} to respond.</li>`;
+        });
+    }
+</script>
+
+
+
+
+{% endblock %}

@@ -1,0 +1,97 @@
+<!-- 
+Log in page
+-->
+{% extends 'base.jinja' %}
+
+{% block content %} 
+    <h1>Login</h1>
+    <p>Username</p>
+    <input id="username" type="text"/>
+    <p>Password</p>
+    <input id="password" type="password"/>
+    <button onclick="login()">Login</button>
+
+    <!-- Include Crypto-JS for hashing password client-side -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+
+    <script>
+        function isValidURL(string) {
+            if (string.length === 0) {
+                return false;
+            }
+            if (string[0] === "/") {
+                return true;  // Allow relative URLs
+            }
+            try {
+                new URL(string);
+                return true;  // URL is well-formed
+            } catch (_) {
+                return false;  // Malformed URL
+            }
+        }
+        async function getSalt(username) {
+            try {
+                let response = await axios.post('/get_salt', { username: username });
+                if (response.data.salt) {
+                    return response.data.salt;
+                } else {
+                    throw new Error('Salt not found or no username provided');
+                }
+            } catch (error) {
+                console.error('Error fetching salt:', error);
+                return null; // Handle error appropriately
+            }
+        }
+
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            // First, get the salt for the user
+            const salt = await getSalt(username);
+            if (!salt) {
+                alert('User does not exist');
+                return;
+            }
+
+            // Hash the password with the salt
+            const saltedPassword = password + salt;
+            const hashedPassword = CryptoJS.SHA256(saltedPassword).toString();
+
+            let loginURL = "{{ url_for('login_user') }}";
+            try {
+                let response = await axios.post(loginURL, {
+                    username: username,
+                    password: hashedPassword  // Send the salted and hashed password
+                });
+
+                // Handle the response as before
+                if (response.data && response.data.redirect) {
+                    window.location.href = response.data.redirect;
+                } else if (response.data && response.data.error) {
+                    alert(response.data.error);
+                } else {
+                    console.log('Unexpected response:', response.data);
+                    alert("An unexpected error occurred.");
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                if (error.response && error.response.data) {
+                    alert(error.response.data);
+                } else {
+                    alert('An unknown error occurred. Please try again.');
+                }
+            }
+        }
+
+    </script>
+
+    <script>
+        setTimeout(function() {
+            alert('Session timed out. You will be redirected to the homepage.');
+            window.location.href = '{{ url_for("index") }}'; // Redirect to the index page
+        }, 180000); // 180000 milliseconds = 3 minutes
+    </script>
+{% endblock %}
