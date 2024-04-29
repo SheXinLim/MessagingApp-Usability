@@ -389,6 +389,7 @@
             if (data.friends && data.friends.length > 0) {
                 data.friends.forEach(friend => {
                     const list_part = document.createElement('li');
+                    // updating remove friend every five seconds as well 
                     list_part.innerHTML = `<a href="#" onclick="startPrivateConversation('${friend}')">${friend}</a> 
                                         <a href="#" onclick="removeFriend('${friend}')">: Remove friend</a>`;
                     list.appendChild(list_part);
