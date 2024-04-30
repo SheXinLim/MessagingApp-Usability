@@ -4,7 +4,7 @@ database file, containing all the logic to interface with the sql database
 '''
 
 import base64
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, or_
 from sqlalchemy.orm import Session
 from models import *
 
@@ -51,16 +51,78 @@ def get_user(username: str):
     with Session(engine) as session:
         return session.get(User, username)
     
+# def remove_friend(username, friend_username):
+#     with Session(engine) as session:
+#         friendship = session.query(Friendship).filter((Friendship.user_id == username) & (Friendship.friend_id == friend_username)).first()
+#         if friendship:
+#             session.delete(friendship)
+#             session.commit()
+#             return True
+#         return False
+
 def remove_friend(username, friend_username):
+    """
+    Removes a friendship between two users, ensuring all bidirectional entries are deleted.
+
+    :param username: The username of one user.
+    :param friend_username: The username of the other user.
+    :return: True if the friendship was successfully removed, False otherwise.
+    """
     with Session(engine) as session:
-        friendship = session.query(Friendship).filter((Friendship.user_id == username) & (Friendship.friend_id == friend_username)).first()
-        if friendship:
-            session.delete(friendship)
+        # Query and delete both possible directions of the friendship
+        friendships = session.query(Friendship).filter(
+            ((Friendship.user_id == username) & (Friendship.friend_id == friend_username)) |
+            ((Friendship.user_id == friend_username) & (Friendship.friend_id == username))
+        ).all()
+
+        if friendships:
+            for friendship in friendships:
+                session.delete(friendship)
+            session.commit()
+            return True
+        return False
+    
+def get_accepted_friend_request_id(user1_username, user2_username):
+    """
+    Retrieves the ID of an accepted friend request between two users, regardless of who was the sender or receiver.
+
+    :param user1_username: The username of one of the users in the friend request.
+    :param user2_username: The username of the other user in the friend request.
+    :return: The ID of the accepted friend request if found, otherwise None.
+    """
+    with Session(engine) as session:
+        # Query the friend_request table for an accepted entry matching the pair in either direction
+        friend_request = session.query(FriendRequest).filter(
+            or_(
+                (FriendRequest.sender_username == user1_username) & (FriendRequest.receiver_username == user2_username),
+                (FriendRequest.sender_username == user2_username) & (FriendRequest.receiver_username == user1_username)
+            ),
+            FriendRequest.status == 'accepted'  # Only select accepted friend requests
+        ).first()
+
+        # If an accepted friend request is found, return its ID
+        if friend_request:
+            return friend_request.id
+        else:
+            return None
+        
+def delete_friend_request_by_id(friend_request_id):
+    """
+    Deletes a friend request by its ID.
+
+    :param friend_request_id: The ID of the friend request to be deleted.
+    :return: True if the deletion was successful, False otherwise.
+    """
+    with Session(engine) as session:
+        # Retrieve the friend request from the database by ID
+        friend_request = session.get(FriendRequest, friend_request_id)
+
+        if friend_request:
+            session.delete(friend_request)
             session.commit()
             return True
         return False
 
-  
 def send_friend_request(sender_username: str, receiver_username: str):
     with Session(engine) as session:
         # Check if both the sender and receiver exist in the database
@@ -84,14 +146,14 @@ def send_friend_request(sender_username: str, receiver_username: str):
         ).first()
 
         # If an existing request is found and it's declined, allow resending
-        if existing_request and existing_request.status == 'declined':
+        if existing_request and (existing_request.status == 'declined' or existing_request.status == 'unfriended'):
             session.delete(existing_request)
             session.commit()
             existing_request = None
 
-        # if existing_request:
-        #     # An existing friend request in a non-declined state is present, don't allow a new request
-        #     return False
+        if existing_request:
+            # An existing friend request in a non-declined state is present, don't allow a new request
+            return False
 
         # If no existing request is found, or the declined one was removed, create a new friend request
         friend_request = FriendRequest(sender_username=sender_username, receiver_username=receiver_username, status='pending')

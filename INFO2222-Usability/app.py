@@ -3,19 +3,22 @@ app.py contains all of the server application
 this is where you'll find all of the get/post request handlers
 the socket event handlers are inside of socket_routes.py
 '''
-from flask import Flask, flash, jsonify, redirect, render_template, request, abort, session, url_for
+from flask import Flask, flash, jsonify, logging, redirect, render_template, request, abort, session, url_for
 from flask_socketio import SocketIO
 import db
 import secrets
 import ssl
 from datetime import datetime
 from datetime import timedelta
+import logging
 
-# import logging
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)  # Set the logging level to DEBUG
 
-# this turns off Flask Logging, uncomment this to turn off Logging
+# # #this turns off Flask Logging, uncomment this to turn off Logging
 # log = logging.getLogger('werkzeug')
 # log.setLevel(logging.ERROR)
+
 def csp_policy_string(policy_dict):
     return "; ".join([f"{key} {' '.join(val) if isinstance(val, list) else val}" for key, val in policy_dict.items()])
 
@@ -153,8 +156,6 @@ def send_friend_request_route():
     else:
         return "Friend request could not be sent (user may not exist or you guys are already friends)"
     
-
-
 @app.route('/friend-requests')
 def friend_requests():
     username = session.get('username')
@@ -247,17 +248,41 @@ def get_hashed_password(username):
         return jsonify({"error": "User not found"}), 404
     
 
-#removing friends
+# #removing friends
+# @app.route('/remove-friend/<friend_username>', methods=['POST'])
+# def remove_friend(friend_username):
+#     user = request.json.get('username')
+#     friend_removed = db.remove_friend(user, friend_username)
+#     if friend_removed:
+#         return jsonify({'message': 'Friend removed successfully.'}), 200
+#     else:
+#         return jsonify({'message': 'Failed to remove friend.'}), 400
+
 @app.route('/remove-friend/<friend_username>', methods=['POST'])
 def remove_friend(friend_username):
-    user = request.json.get('username')
-    friend_removed = db.remove_friend(user, friend_username)
-    if friend_removed:
-        return jsonify({'message': 'Friend removed successfully.'}), 200
-    else:
-        return jsonify({'message': 'Failed to remove friend.'}), 400
+    username = session.get('username')  # Retrieve the current user from the session
+    if not username:
+        return jsonify({'error': 'You must be logged in to perform this action.'}), 403
 
+    # Remove the friend entirely
+    friend_removed = db.remove_friend(username, friend_username)
+    if not friend_removed:
+        return jsonify({'error': 'Failed to remove friend.'}), 400
 
+    # Attempt to retrieve the friend request ID
+    friendreq_id = db.get_accepted_friend_request_id(username, friend_username)
+    if friendreq_id is None:
+        return jsonify({'error': 'Failed to retrieve friend request ID.'}), 401
+    # Attempt to delete the friend request by ID
+    request_deleted = db.delete_friend_request_by_id(friendreq_id)
+    if not request_deleted:
+        return jsonify({'error': 'Failed to delete friend request.'}), 500
+    # # Update the status of the friend request
+    # status_updated = db.update_friend_request_status(friendreq_id, 'unfriended')
+    # if not status_updated:
+    #     return jsonify({'error': 'Failed to update friend request status.'}), 409
+
+    return  jsonify(message="Friend has been removed"), 200
 if __name__ == '__main__':
     # socketio.run(app)
     # for HTTPS Communication

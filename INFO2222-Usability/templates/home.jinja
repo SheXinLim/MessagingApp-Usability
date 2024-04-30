@@ -220,9 +220,6 @@
     }
      
     
-
-
-
     function send() {
         let message = $("#message").val();
         $("#message").val("");
@@ -239,9 +236,9 @@
        add_message(message, color);
     });
 
+
     function removeFriend(friendUsername) {
         if (confirm(`Are you sure you want to remove ${friendUsername} from your friends list?`)) {
-
             fetch(`/remove-friend/${friendUsername}`, {
                 method: 'POST',
                 headers: {
@@ -251,25 +248,20 @@
             })
             .then(response => {
                 if (!response.ok) {
-                    throw new Error('Response not proper');
+                    throw new Error('Network response was not ok');
                 }
                 return response.json();
             })
             .then(data => {
-                alert(data.message); 
-                updateFriendsList();  
+                alert(data.message); // Display whatever message the server sends back
+                updateFriendsList(); // Update the list if the server indicates success, if needed
             })
             .catch((error) => {
-                console.error('Not successful:', error);
-                alert('Error');
+                console.error('There has been a problem with your fetch operation:', error);
+                alert('An error occurred.');
             });
         }
     }
-
-
-   
-
-
 
     function startPrivateConversation(friendUsername) {
         socket.emit("join", username, friendUsername, (roomId) => {
@@ -283,8 +275,6 @@
             }
         });
     }
-
-
 
     function sendPrivateMessage() {
         let message = $("#message").val();
@@ -356,7 +346,7 @@
             'Content-Type': 'application/json',
             'Accept': 'application/json',
         },
-        body: JSON.stringify({ username: "{{ username }}" })  // Or any other data you might need
+        body: JSON.stringify({ username: "{{ username }}" }) 
     })
     .then(response => {
         if (!response.ok) {
