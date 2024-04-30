@@ -14,10 +14,17 @@ from sqlalchemy import String, Column, Integer, ForeignKey, Enum, DateTime
 from sqlalchemy.orm import relationship, DeclarativeBase, Mapped, mapped_column
 from typing import Dict
 from datetime import datetime
+from enum import Enum as PyEnum
 
 # data models
 class Base(DeclarativeBase):
     pass
+
+class RoleType(PyEnum):
+    STUDENT = "student"
+    ACADEMIC = "academic"
+    ADMINISTRATIVE = "administrative"
+    ADMIN = "admin"
 
 # model to store user information
 class User(Base):
@@ -33,6 +40,7 @@ class User(Base):
     salt: Mapped[str] = mapped_column(String)
     failed_attempts: Mapped[int] = mapped_column(Integer, default=0)
     lockout_until: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+    role: Mapped[RoleType] = mapped_column(Enum(RoleType), nullable=False)
 
 class FriendRequest(Base):
     __tablename__ = "friend_request"

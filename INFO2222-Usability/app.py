@@ -12,9 +12,6 @@ from datetime import datetime
 from datetime import timedelta
 import logging
 
-# Configure logging
-logging.basicConfig(level=logging.DEBUG)  # Set the logging level to DEBUG
-
 # # #this turns off Flask Logging, uncomment this to turn off Logging
 # log = logging.getLogger('werkzeug')
 # log.setLevel(logging.ERROR)
@@ -268,24 +265,27 @@ def remove_friend(friend_username):
     friend_removed = db.remove_friend(username, friend_username)
     if not friend_removed:
         return jsonify({'error': 'Failed to remove friend.'}), 400
-
+    
     # Attempt to retrieve the friend request ID
     friendreq_id = db.get_accepted_friend_request_id(username, friend_username)
+
     if friendreq_id is None:
         return jsonify({'error': 'Failed to retrieve friend request ID.'}), 401
+    
     # Attempt to delete the friend request by ID
     request_deleted = db.delete_friend_request_by_id(friendreq_id)
     if not request_deleted:
         return jsonify({'error': 'Failed to delete friend request.'}), 500
-    # # Update the status of the friend request
-    # status_updated = db.update_friend_request_status(friendreq_id, 'unfriended')
-    # if not status_updated:
-    #     return jsonify({'error': 'Failed to update friend request status.'}), 409
 
     return  jsonify(message="Friend has been removed"), 200
+
+
+
+
 if __name__ == '__main__':
     # socketio.run(app)
     # for HTTPS Communication
-        context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-        context.load_cert_chain('cert/info2222.test.crt', 'cert/info2222.test.key') 
-        app.run(debug=False, ssl_context=context, host='127.0.0.1', port=5000) # debug should be false after fully implemented
+    context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+    context.load_cert_chain('cert/info2222.test.crt', 'cert/info2222.test.key') 
+    db.create_default_admin()
+    app.run(debug=False, ssl_context=context, host='127.0.0.1', port=5000) # debug should be false after fully implemented

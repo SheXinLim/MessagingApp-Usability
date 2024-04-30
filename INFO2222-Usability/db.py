@@ -42,7 +42,7 @@ def check_password(plain_password, stored_password):
 def insert_user(username: str, password: str, salt:str):
     with Session(engine) as session:
         hashed_password = hash_password(password)
-        user = User(username=username, password=hashed_password, salt=salt, failed_attempts=0, lockout_until=None)
+        user = User(username=username, password=hashed_password, salt=salt, failed_attempts=0, lockout_until=None, role=RoleType.STUDENT)
         session.add(user)
         session.commit()
 
@@ -146,7 +146,7 @@ def send_friend_request(sender_username: str, receiver_username: str):
         ).first()
 
         # If an existing request is found and it's declined, allow resending
-        if existing_request and (existing_request.status == 'declined' or existing_request.status == 'unfriended'):
+        if existing_request and existing_request.status == 'declined':
             session.delete(existing_request)
             session.commit()
             existing_request = None
@@ -240,4 +240,21 @@ def save_user(user):
         session.merge(user)  # The merge() method is used to either update an existing row or insert a new row.
         session.commit()
 
-
+def create_default_admin():
+    with Session(engine) as session:
+        admin_exists = session.query(User).filter_by(username="admin").first()
+        if not admin_exists:
+            admin_password = "Info2222-AdminPw"
+            salt = "G7rU82dVz2kL3sHb"
+            hashed_password = hash_password(admin_password)
+            admin_user = User(
+                username="admin",
+                password=hashed_password,
+                salt=salt,
+                role=RoleType.ADMIN
+            )
+            session.add(admin_user)
+            session.commit()
+            return True  # Admin was created
+        else:
+            return False  # Admin already exists
