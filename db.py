@@ -44,8 +44,6 @@ def check_password(plain_password, stored_password):
     salt = base64.b64decode(salt_encoded)
     hashed_password = base64.b64decode(hashed_password_encoded)
     new_hashed_password = hashlib.pbkdf2_hmac('sha256', plain_password.encode('utf-8'), salt, 100000)
-    print(new_hashed_password)
-    print(hashed_password)
     return new_hashed_password == hashed_password
 
 # Modify the insert_user function to hash password before storing
@@ -251,3 +249,27 @@ def save_user(user):
     with Session(engine) as session:
         session.merge(user)  # The merge() method is used to either update an existing row or insert a new row.
         session.commit()
+
+# admin can change role 
+def update_user_role(username, role):
+    with Session(engine) as session:
+        try:
+            user = session.query(User).filter_by(username=username).one_or_none()
+            if user:
+                # Check if the new role is different from the current role
+                if user.role.value != role:
+                    user.role = RoleType[role.upper()]  # Update the role, ensuring it's a valid enum value
+                    session.commit()
+                    return True  # Role was different and has been updated
+                else:
+                    return False  # Role is the same as the current role, no update needed
+            else:
+                return False  # User not found
+        except:
+            session.rollback()  # Roll back the transaction on error
+            print(f"An error occurred")
+            return False  # Return False on error
+
+def get_all_users():
+    with Session(engine) as session:
+        return session.query(User).all()

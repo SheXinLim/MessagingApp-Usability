@@ -55,6 +55,9 @@
     <div style="float: left;">
         <ul>
             <li style="display: inline-block;">Username: {{ username }}</li>
+            {% if user_role == 'ADMIN'%}
+                <li style="display: inline-block;"><a href="{{ url_for('admin_panel') }}">Admin Panel</a></li>
+            {% endif %}
         </ul>
     </div>
     <div style="float: right;">
@@ -342,8 +345,6 @@
         const regex = /^\w{1,30}$/;
         return regex.test(username);
     }
-
-
 
     //function to accept or decline friend request
     function handleFriendRequest(action, requestId) {

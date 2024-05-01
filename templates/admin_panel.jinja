@@ -1,0 +1,49 @@
+{% extends 'base.jinja' %}
+{% block content %}
+<h1>Admin Dashboard</h1>
+
+{% for user in users %}
+<form class="role-update-form" action="{{ url_for('update_user_role') }}" method="post" onsubmit="updateUserRole(event)">
+    <div>
+        <label>{{ user.username }} (Current Role: {{ user.role.name }})</label>
+        <select name="new_role">
+            <option value="student" {% if user.role.name == 'STUDENT' %}selected{% endif %}>Student</option>
+            <option value="academic" {% if user.role.name == 'ACADEMIC' %}selected{% endif %}>Academic</option>
+            <option value="administrative" {% if user.role.name == 'ADMINISTRATIVE' %}selected{% endif %}>Administrative</option>
+            <option value="admin" {% if user.role.name == 'ADMIN' %}selected{% endif %}>Admin</option>
+        </select>
+        <input type="hidden" name="username" value="{{ user.username }}">
+        <button type="submit">Update Role</button>
+    </div>
+</form>
+{% endfor %}
+
+<script>
+function updateUserRole(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    fetch(form.action, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message); // Show success message
+            location.reload();
+        } else {
+            alert(data.message); // Show error message
+        }
+    })
+    .catch(error => {
+        console.error('Error updating user role:', error);
+        alert('An error occurred while attempting to update the user role. Please try again.');
+    });
+}
+</script>
+
+
+
+{% endblock %}

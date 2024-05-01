@@ -91,7 +91,6 @@ Sign up page, pretty much the same as login.
                 alert("An unexpected error occurred.");
             }
         } catch (error) {
-            // Handle errors that occur during the request
             console.error('Signup error:', error);
             if (error.response && error.response.data) {
                 alert(error.response.data);
