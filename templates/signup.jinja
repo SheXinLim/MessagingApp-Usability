@@ -40,7 +40,7 @@ Sign up page, pretty much the same as login.
     
     function validatePassword(password) {
         if (password.length < 8) {
-                return false;
+            return false;
         }
         if (!/[a-z]/.test(password)) {
             return false;
@@ -56,6 +56,7 @@ Sign up page, pretty much the same as login.
         }
         return true;
     }  
+    
     async function signup() {
         let username = document.getElementById('username').value;
         let password = document.getElementById('password').value;

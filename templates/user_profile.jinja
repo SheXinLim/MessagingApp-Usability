@@ -1,0 +1,9 @@
+{% extends 'base.jinja' %}
+
+{% block content %}
+<div class="user-profile">
+    <h1>User Profile: {{ user.username }}</h1>
+    <p><strong>Username:</strong> {{ user.username }}</p>
+    <p><strong>Role:</strong> {{ user.role.value }}</p>
+</div>
+{% endblock %}

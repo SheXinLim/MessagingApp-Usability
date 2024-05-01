@@ -51,13 +51,20 @@
 </style>
 
 <!--Navbar, you'll see the username here-->
-<nav style="border-bottom: 1px solid black;">
-    <ol style="float: right">
-        <li style="display:inline-block">Username:  {{ username }} </li>
-        <li style="display: inline-block"><a href="{{ url_for('home') }}">Home</a></li>
-        <li style="display: inline-block"><a href="{{ url_for('friend_requests') }}">Friend Requests</a></li>
-        <li style="display: inline-block"><a href="{{ url_for('logout') }}" onclick="return confirm('Are you sure you want to log out?')">Log Out</a></li>
-    </ol>
+<nav style="border-bottom: 1px solid black; overflow: auto;">
+    <div style="float: left;">
+        <ul>
+            <li style="display: inline-block;">Username: {{ username }}</li>
+        </ul>
+    </div>
+    <div style="float: right;">
+        <ul>
+            <li style="display: inline-block;"><a href="{{ url_for('home') }}">Home</a></li>
+            <li style="display: inline-block;"><a href="{{ url_for('user_profile', username=username) }}">Profile</a></li>
+            <li style="display: inline-block;"><a href="{{ url_for('friend_requests') }}">Friend Requests</a></li>
+            <li style="display: inline-block;"><a href="{{ url_for('logout') }}" onclick="return confirm('Are you sure you want to log out?')">Log Out</a></li>
+        </ul>
+    </div>
 </nav>
 
 

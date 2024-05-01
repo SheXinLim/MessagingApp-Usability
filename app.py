@@ -3,6 +3,7 @@ app.py contains all of the server application
 this is where you'll find all of the get/post request handlers
 the socket event handlers are inside of socket_routes.py
 '''
+import hashlib
 from flask import Flask, flash, jsonify, logging, redirect, render_template, request, abort, session, url_for
 from flask_socketio import SocketIO
 import db
@@ -279,13 +280,43 @@ def remove_friend(friend_username):
 
     return  jsonify(message="Friend has been removed"), 200
 
+@app.route('/user/profile/<username>')
+def user_profile(username):
+    user = db.get_user(username)  # Retrieve the user by username from the database
+    if not user:
+        flash("User not found", "error")
+        return redirect(url_for('index'))  # Redirects to a generic index or error page if user not found
+    # Pass the entire user object to the template which allows us to access all attributes of the user
+    return render_template("user_profile.jinja", user=user)
 
+def sha256_hash(salted_password):
+    hash_object = hashlib.sha256(salted_password.encode('utf-8'))
+    hashed_password = hash_object.hexdigest()  # Convert hash to hexadecimal string
+    return hashed_password
 
+def create_default_admin():
+    admin_username = 'admin'
+    admin_password = 'Info2222-AdminSecurePw!'
+    admin_salt = 'GYNQNPCXCLJkl0dI'
+    saltPassword = admin_password + admin_salt
+    hashedPassword = sha256_hash(saltPassword)
+
+    # Check if user already exists
+    user = db.get_user(admin_username)
+    if user is None:
+        with app.test_client() as client:
+            response = client.post('/signup/user', json={
+                'username': admin_username,
+                'password': hashedPassword,
+                'salt': admin_salt
+            })
+            print(response.json)  # To see what the response is
 
 if __name__ == '__main__':
     # socketio.run(app)
     # for HTTPS Communication
     context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-    context.load_cert_chain('cert/info2222.test.crt', 'cert/info2222.test.key') 
-    db.create_default_admin()
+    context.load_cert_chain('cert/info2222.test.crt', 'cert/info2222.test.key')
+    with app.app_context():
+        create_default_admin()
     app.run(debug=False, ssl_context=context, host='127.0.0.1', port=5000) # debug should be false after fully implemented
