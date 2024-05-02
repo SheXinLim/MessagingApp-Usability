@@ -161,7 +161,9 @@ def send(username, message, room_id):
     
     room_members = room.get_room_members(room_id)
     if not room_members or username not in room_members:
-        return "Both users must join the room before sending messages."
+        emit("incoming", f"{username}: {message}")
+        return
+        # return "Both users must join the room before sending messages."
     
     # Check if the sender and receiver have joined the room with each other's usernames
     sender_name = username
