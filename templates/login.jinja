@@ -3,13 +3,61 @@ Log in page
 -->
 {% extends 'base.jinja' %}
 
-{% block content %} 
+{% block content %}
+    <style>
+        html, body {
+            height: 100%;  /* Use full height of the window */
+            margin: 0;  /* Remove default margin */
+            display: flex;  /* Enable Flexbox */
+            flex-direction: column;  /* Align children vertically */
+            justify-content: center;  /* Center horizontally */
+            align-items: center;  /* Center vertically */
+            font-family: 'Open Sans', sans-serif;
+            background-color: #A8D0E6;  /* Light blue background */
+        }
+
+        h1 {
+            text-align: center;  /* Center the heading text horizontally */
+            font-family: 'Open Sans', sans-serif;
+            color: white; /* Ensure text is readable on background */
+            padding: 20px 40px; /* Add padding to make the text more prominent */
+            border-radius: 10px; /* Rounded corners for aesthetic */
+            display: flex; /* Use Flexbox inside h1 */
+            align-items: center; /* Center text vertically */
+            justify-content: center; /* Center text horizontally */
+        }
+        p {
+            text-align: center;  /* Center paragraph text */
+            font-family: 'Open Sans', sans-serif;
+            color: white; /* Ensure text is readable on background */
+            font-size: 20px;
+            font-weight: bold;  /* Make text bold */
+        }
+
+        a.button {
+            padding: 10px 20px;
+            background-color: #F76C6C; 
+            color: white;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 16px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        a.button:hover {
+            background-color: #e56c6c; 
+            color: #ffffff;
+        }
+        
+    </style>
     <h1>Login</h1>
     <p>Username</p>
     <input id="username" type="text"/>
     <p>Password</p>
     <input id="password" type="password"/>
-    <button onclick="login()">Login</button>
+    <p><a href="#" class="button" onclick="login()">Login</a></p>
+
 
     <!-- Include Crypto-JS for hashing password client-side -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>

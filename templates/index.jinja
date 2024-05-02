@@ -1,13 +1,62 @@
-<!-- 
-Index page, the "default" page when you visit "http://localhost/" 
- without any URL parameters at the end
- -->
 {% extends 'base.jinja' %}
 
-
 {% block content %} 
-    <h1>Hello! Welcome to the site!</h1>
-    <p><a href={{ url_for('signup') }}> Sign Up</a></p>
-    <p><a href={{ url_for('login') }}> Login</a></p>
-    
+<style>
+    html, body {
+        height: 100%;  /* Use full height of the window */
+        margin: 0;  /* Remove default margin */
+        display: flex;  /* Enable Flexbox */
+        flex-direction: column;  /* Align children vertically */
+        justify-content: center;  /* Center horizontally */
+        align-items: center;  /* Center vertically */
+        font-family: 'Open Sans', sans-serif;
+        background-color: #A8D0E6;  /* Light blue background */
+    }
+
+    h1 {
+        text-align: center;  /* Center the heading text horizontally */
+        font-family: 'Open Sans', sans-serif;
+        background-image: url('static/js/libs/image.png'); /* Ensure correct path to image */
+        background-size: contain; /* Fixed size for the background image */
+        background-repeat: no-repeat; /* Prevent the image from repeating */
+        background-position: center; /* Center the background image */
+        color: #F76C6c; /* Ensure text is readable on background */
+        padding: 20px 40px; /* Add padding to make the text more prominent */
+        border-radius: 10px; /* Rounded corners for aesthetic */
+        width: 300px; /* Set a fixed width for the h1 element */
+        height: 150px; /* Set a fixed height to encapsulate the background properly */
+        display: flex; /* Use Flexbox inside h1 */
+        align-items: center; /* Center text vertically */
+        justify-content: center; /* Center text horizontally */
+    }
+    p {
+        text-align: center;  /* Center paragraph text */
+        font-family: 'Open Sans', sans-serif;
+        color: white; /* Ensure text is readable on background */
+        font-size: 20px;
+        font-weight: bold;  /* Make text bold */
+    }
+
+    a.button {
+        padding: 10px 20px;
+        background-color: #F76C6C; 
+        color: white;
+        border: none;
+        border-radius: 5px;
+        text-decoration: none;
+        font-size: 16px;
+        transition: background-color 0.3s, color 0.3s;
+    }
+
+    a.button:hover {
+        background-color: #e56c6c; 
+        color: #ffffff;
+    }
+</style>
+
+<h1>Hello!</h1>
+<P>Welcome to the site!</P>
+<p><a href={{ url_for('signup') }} class="button">Sign Up</a></p>
+<p><a href={{ url_for('login') }} class="button">Login</a></p>
+
 {% endblock %}
