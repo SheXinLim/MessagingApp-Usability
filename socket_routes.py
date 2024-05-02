@@ -154,51 +154,76 @@ def join(sender_name, receiver_name):
 
 
 
+# @socketio.on("send")
+# def send(username, message, room_id):
+#     if username not in joined_users:
+#         return "You must join a room before sending messages."
+    
+#     room_members = room.get_room_members(room_id)
+#     if not room_members or username not in room_members:
+#         emit("incoming", f"{username}: {message}")
+#         return
+#         # return "Both users must join the room before sending messages."
+    
+#     # Check if the sender and receiver have joined the room with each other's usernames
+#     sender_name = username
+#     receiver_name = None
+#     for name, relationships in room_relationships.items():
+#         if sender_name in relationships:
+#             receiver_name = name
+#             break
+    
+#     if receiver_name is None or sender_name not in room_relationships.get(receiver_name, set()):
+#         return "Both users must join the room with each other's usernames before sending messages."
+
+#     room_members = room.dict.values() 
+
+#     if len(room_members) > 1:
+#         # Emit the encrypted message to the room
+#         # emit("incoming", {"username": username, "message": message}, to=room_id)
+#         emit("incoming", f"{username}: {message}", to=room_id)
+
+
+#         # Check if the sender has left the room
+#         if user_left_status.get(username, False):
+#             return  # Don't store or emit the message if the sender has left the room
+        
+
+
+
+#         with Session() as session:  # Create a session instance
+#             new_message = Message(sender_username=sender_name, receiver_username=receiver_name, content=message)
+#             session.add(new_message)
+#             session.commit()
+
+#             print(f"Encrypted message stored in the database: {username}: {message}")
+
+
+
 @socketio.on("send")
 def send(username, message, room_id):
     if username not in joined_users:
         return "You must join a room before sending messages."
     
+    # Check if the sender or receiver have joined the room
     room_members = room.get_room_members(room_id)
     if not room_members or username not in room_members:
+        #message only to the sender's room
         emit("incoming", f"{username}: {message}")
         return
-        # return "Both users must join the room before sending messages."
-    
-    # Check if the sender and receiver have joined the room with each other's usernames
-    sender_name = username
-    receiver_name = None
-    for name, relationships in room_relationships.items():
-        if sender_name in relationships:
-            receiver_name = name
-            break
-    
-    if receiver_name is None or sender_name not in room_relationships.get(receiver_name, set()):
-        return "Both users must join the room with each other's usernames before sending messages."
 
-    room_members = room.dict.values() 
+    # Check if the sender has left the room
+    if user_left_status.get(username, False):
+        return  # Don't store or emit the message if the sender has left the room
 
-    if len(room_members) > 1:
-        # Emit the encrypted message to the room
-        # emit("incoming", {"username": username, "message": message}, to=room_id)
-        emit("incoming", f"{username}: {message}", to=room_id)
+    # Emit the message to the room
+    emit("incoming", f"{username}: {message}", to=room_id)
 
-
-        # Check if the sender has left the room
-        if user_left_status.get(username, False):
-            return  # Don't store or emit the message if the sender has left the room
-        
-
-
-
-        with Session() as session:  # Create a session instance
-            new_message = Message(sender_username=sender_name, receiver_username=receiver_name, content=message)
-            session.add(new_message)
-            session.commit()
-
-            print(f"Encrypted message stored in the database: {username}: {message}")
-
-
+    # Store the message in the database
+    with Session() as session:
+        new_message = Message(sender_username=username, content=message)
+        session.add(new_message)
+        session.commit()
 
 
 @socketio.on("start_private_conversation")
