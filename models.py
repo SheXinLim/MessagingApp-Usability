@@ -10,7 +10,7 @@ Prisma docs also looks so much better in comparison
 or use SQLite, if you're not into fancy ORMs (but be mindful of Injection attacks :) )
 '''
 
-from sqlalchemy import String, Column, Integer, ForeignKey, Enum, DateTime
+from sqlalchemy import String, Column, Integer, ForeignKey, Enum, DateTime, Text
 from sqlalchemy.orm import relationship, DeclarativeBase, Mapped, mapped_column
 from typing import Dict
 from datetime import datetime
@@ -70,6 +70,23 @@ class Friendship(Base):
 
     user = relationship("User", foreign_keys=[user_id])
     friend = relationship("User", foreign_keys=[friend_id])
+
+class Article(Base):
+    __tablename__ = "article"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    title: Mapped[str] = mapped_column(String(100), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    author_id: Mapped[int] = mapped_column(Integer, ForeignKey('user.username'), nullable=False)
+    comments = relationship('Comment', backref='article', lazy='dynamic')
+    user = relationship("User", foreign_keys=[author_id])
+
+class Comment(Base):
+    __tablename__ = "comment"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    article_id: Mapped[int] = mapped_column(Integer, ForeignKey('article.id'), nullable=False)
+    author_id: Mapped[int] = mapped_column(Integer, ForeignKey('user.username'), nullable=False)
+    user = relationship("User", foreign_keys=[author_id])
 
 # stateful counter used to generate the room id
 class Counter():

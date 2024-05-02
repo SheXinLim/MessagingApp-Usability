@@ -343,6 +343,68 @@ def update_user_role():
     except Exception as e:
         return jsonify({"success": False, "message": "An error occurred: " + str(e)}), 500
 
+# knowledge repository
+@app.route("/knowledge-repository", defaults={'article_id': None})
+@app.route("/knowledge-repository/<int:article_id>")
+def knowledge_repository(article_id):
+    username = session.get("username")
+    if username is None:
+        return redirect(url_for('login'))  # Redirect to login page
+    articles = db.get_all_articles()
+    selected_article = db.get_article(article_id) if article_id else None
+    if selected_article != None:
+        author_role = db.get_user_role(selected_article.author_id)
+    else:
+        author_role = "student"
+    return render_template('knowledge_repository.jinja', username=username, articles=articles, selected_article=selected_article, author_role = author_role)
+
+
+@app.route("/add-article", methods=["POST"])
+def add_article():
+    title = request.form.get('title')
+    content = request.form.get('content')
+    author_id = session.get('username')  # Assuming username identifies the user
+
+    success, message = db.insert_article(title, content, author_id)
+    flash(message)
+    return redirect(url_for('knowledge_repository'))
+
+@app.route("/edit-article/<int:article_id>", methods=["GET", "POST"])
+def edit_article(article_id):
+    if request.method == 'POST':
+        title = request.form.get('title')
+        content = request.form.get('content')
+        db.update_article(article_id, title, content)  # Update the article in the database
+        return redirect(url_for('articles'))
+    article = db.get_article(article_id)  # Retrieve the article to edit
+    return render_template("edit_article.jinja", article=article)
+
+@app.route("/delete-article/<int:article_id>", methods=["POST"])
+def delete_article(article_id):
+    db.delete_article(article_id)  # Delete the article from the database
+    flash('Article deleted successfully')
+    return redirect(url_for('articles'))
+
+@app.route("/add-comment/<int:article_id>", methods=["POST"])
+def add_comment(article_id):
+    content = request.form.get('content')
+    author_id = session.get('username')  # Assume we store user ID in session
+    db.insert_comment(content, article_id, author_id)  # Insert the comment
+    return redirect(url_for('articles'))
+
+@app.route("/delete-comment/<int:comment_id>", methods=["POST"])
+def delete_comment(comment_id):
+    db.delete_comment(comment_id)  # Delete the comment from the database
+    flash('Comment deleted successfully')
+    return redirect(url_for('articles'))
+
+@app.route("/article/<int:article_id>")
+def article_detail(article_id):
+    article = db.get_article(article_id)  # Assuming this function fetches the article from the database
+    comments = db.get_comments(article_id)  # Assuming this function fetches related comments
+    return render_template('article_detail.jinja', article=article, comments=comments)
+
+
 if __name__ == '__main__':
     # socketio.run(app)
     # for HTTPS Communication
