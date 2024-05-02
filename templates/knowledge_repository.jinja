@@ -1,0 +1,217 @@
+{% extends 'base.jinja' %}
+
+{% block content %}
+<style>
+    html, body {
+        height: 100%;  /* Use full height of the window */
+        margin: 10px;  /* Remove default margin */
+        display: flex;  /* Enable Flexbox */
+        flex-direction: column;  /* Align children vertically */
+        font-family: 'Open Sans', sans-serif;
+        background-color: #A8D0E6;  /* Light blue background */
+    }
+
+    h2{
+        font-family: 'Open Sans', sans-serif;
+    }
+    p {
+        font-family: 'Open Sans', sans-serif;
+        color: black; /* Ensure text is readable on background */
+        font-size: 14px;
+        font-weight: bold;  /* Make text bold */
+    }
+    .container {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px;
+    }
+    .sidebar {
+        width: 30%;
+        border-right: 2px solid white;
+        padding-right: 20px;
+    }
+    .article-preview {
+        cursor: pointer;
+        padding: 1px 4px; /* Reduced padding */
+        border-bottom: 1px solid #eee;
+        font-size: 14px; /* Smaller font size for article titles */
+    }
+    .article-preview:hover {
+        background-color: #f9f9f9;
+    }
+    .main-content {
+        width: 65%;
+        padding-left: 20px;
+    }
+    .comments {
+        margin-top: 20px;
+        background-color: #f0f0f0;
+        padding: 10px;
+    }
+    .comment {
+        margin-bottom: 10px;
+    }
+    .modal {
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        z-index: 1; /* Sit on top */
+        left: 0;
+        top: 0;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgb(0,0,0); /* Fallback color */
+        background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    }
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto; /* 15% from the top and centered */
+        padding: 20px;
+        border: 1px solid #888;
+        width: 50%; /* Could be more or less, depending on screen size */
+    }
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+    .close:hover,
+    .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    nav {
+        overflow: auto
+        padding: 2px 0;
+    }
+
+    #tabs button {
+        padding: 10px 15px;  /* Increase padding to make buttons larger */
+        font-size: 14px;    /* Increase font size for better visibility */
+        margin-left: 10px;  /* Add some space between the buttons */
+        cursor: pointer;
+    }
+
+    nav button {
+        font-family: 'Open Sans', sans-serif;
+        padding: 5px 10px;
+        background-color: white; 
+        color: black;
+        border: none;
+        border-radius: 2px;
+        cursor: pointer;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        margin-right: 10px;  
+        font-size: 15px;
+        transition: background-color 0.3s, color 0.3s;
+    }
+
+    nav button:hover {
+        background-color: #dddbcf; /* Darker blue on hover */
+    }
+
+</style>
+<nav style="padding: 2px 0; overflow: auto;">
+
+    <div style="float: left;">
+        <ul>
+            <li class="username" style="display: inline-block;">Username: {{ username }}</li>
+        </ul>
+    </div>
+    <div style="float: right;">
+        <ul>
+            <li style="display: inline-block;"><button onclick="location.href='{{ url_for('home') }}'">Home</button></li>
+            <button onclick="confirmLogout()">Log Out</button>
+        
+        </ul>
+    </div>
+</nav>
+<div class="container">
+    <div class="sidebar">
+        <h2>Articles</h2>
+            {% for article in articles %}
+            <div class="article-preview" onclick="location.href='{{ url_for('knowledge_repository', article_id=article.id) }}'">
+                <h3>{{ article.title }}</h3>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="main-content">
+            {% if selected_article %}
+            <h1>{{ selected_article.title }}</h1>
+            <p>{{ selected_article.content }}</p>
+            <p>Author: {{ selected_article.author_id }}, Role: {{ author_role }}</p> <!-- Display author and role -->
+            <div class="comments">
+                <h3>Comments</h3>
+                {% for comment in selected_article.comments %}
+                <div class="comment">
+                    <p>{{ comment.content }} - <small>{{ comment.author.username }}</small></p>
+                    {% if current_user.id == comment.author_id or current_user.is_staff %}
+                    <form action="{{ url_for('delete_comment', id=comment.id) }}" method="post">
+                        <button type="submit">Delete</button>
+                    </form>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                <form action="{{ url_for('add_comment', article_id=selected_article.id) }}" method="post">
+                    <input type="text" name="content" placeholder="Add a comment...">
+                    <button type="submit">Comment</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Button to open the modal -->
+    <button id="newArticleBtn">New Article</button>
+    
+    <!-- The Modal -->
+    <div id="newArticleModal" class="modal">
+        <!-- Modal content -->
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <form action="{{ url_for('add_article') }}" method="post" style="margin-top: 20px;">
+            <input type="text" name="title" placeholder="Article Title" required>
+            <textarea name="content" placeholder="Write something..." required></textarea>
+            <button type="submit">Post</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function confirmLogout() {
+        if (confirm('Are you sure you want to log out?')) {
+            location.href = '{{ url_for('logout') }}';
+        }
+    }
+    // Get the modal
+    var modal = document.getElementById('newArticleModal');
+
+    // Get the button that opens the modal
+    var btn = document.getElementById('newArticleBtn');
+
+    // Get the <span> element that closes the modal
+    var span = document.getElementsByClassName("close")[0];
+
+    // When the user clicks the button, open the modal 
+    btn.onclick = function() {
+        modal.style.display = "block";
+    }
+
+    // When the user clicks on <span> (x), close the modal
+    span.onclick = function() {
+        modal.style.display = "none";
+    }
+
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+</script>
+{% endblock %}

@@ -7,6 +7,26 @@
 
 {% block content %} 
    <style>
+    html, body {
+        height: 100%;  /* Use full height of the window */
+        margin: 10px;  /* Remove default margin */
+        display: flex;  /* Enable Flexbox */
+        flex-direction: column;  /* Align children vertically */
+        font-family: 'Open Sans', sans-serif;
+        background-color: #A8D0E6;  /* Light blue background */
+    }
+
+    h1 {
+        text-align: center;  /* Center the heading text horizontally */
+        font-family: 'Open Sans', sans-serif;
+        display: flex; /* Use Flexbox inside h1 */
+    }
+    p {
+        font-family: 'Open Sans', sans-serif;
+        color: black; /* Ensure text is readable on background */
+        font-size: 20px;
+        font-weight: bold;  /* Make text bold */
+    }
     nav {
         border-bottom: 1px solid black;
         overflow: auto
@@ -28,18 +48,80 @@
     }
 
     #friends-list {
-        position: absolute;
-        right: 0;
-        top: 100px; /* Adjust based on header height */
-        width: 200px; /* Adjust based on desired width */
-        border-left: 1px solid black;
-        height: 400px;
-        overflow: auto;
+        position: absolute; 
+        right: 10px;      /* Distance from the right side of the viewport */
+        top: 12%;         /* Distance from the top of the viewport */
+        width: 200px;     /* Fixed width */
+        max-height: 80%;  /* Maximum height before scrolling */
+        overflow-y: auto; /* Adds a vertical scrollbar when needed */
+        border: 1px solid #ccc; /* Light grey border */
+        background-color: #f9f9f9; /* Light background color */
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Adds shadow for depth */
+        padding: 10px;    /* Padding inside the friends list */
+        border-radius: 8px; /* Rounded corners */
+        z-index: 1000;    /* Ensures it's on top of other elements */
+    }
+
+    #friends-list h2 {
+        margin-top: 0;
+        color: #333;
+        text-align: center;
+    }
+
+    #friends-list ul {
+        padding: 0;
+        list-style-type: none; /* Removes bullet points */
+    }
+
+    #friends-list li {
+        list-style-type: none; /* Removes bullet points */
+        padding: 5px;
+        margin-bottom: 5px;
+        background-color: #e6e6e6; /* Slightly darker background for list items */
+        border-radius: 4px; /* Rounded corners for list items */
+    }
+
+    #friends-list li a {
+        list-style-type: none; /* Removes bullet points */
+        text-decoration: none;
+        color: #2a2a2a; /* Dark text color for readability */
+        display: block;
+    }
+
+    #friends-list li a:hover {
+        background-color: #d4d4d4; /* Hover effect */
     }
 
     .text  {
         margin-top: 2px;
         margin-bottom: 2px;
+    }
+
+    nav button {
+        font-family: 'Open Sans', sans-serif;
+        padding: 5px 10px;
+        background-color: white; 
+        color: black;
+        border: none;
+        border-radius: 2px;
+        cursor: pointer;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        margin-right: 10px;  
+        font-size: 15px;
+        transition: background-color 0.3s, color 0.3s;
+    }
+
+    nav button:hover {
+        background-color: #dddbcf; /* Darker blue on hover */
+    }
+
+    nav ul li.username {
+        font-family: 'Open Sans', sans-serif;
+        color: black;  /* Make the username color stand out */
+        font-weight: bold;  /* Bold font for emphasis */
+        margin-right: 10px; 
     }
 
 </style>
@@ -52,20 +134,23 @@
 
 <!--Navbar, you'll see the username here-->
 <nav style="border-bottom: 1px solid black; overflow: auto;">
+
     <div style="float: left;">
         <ul>
-            <li style="display: inline-block;">Username: {{ username }}</li>
+            <li class="username" style="display: inline-block;">Username: {{ username }}</li>
             {% if user_role == 'ADMIN'%}
-                <li style="display: inline-block;"><a href="{{ url_for('admin_panel') }}">Admin Panel</a></li>
+                <li style="display: inline-block;"><button onclick="location.href='{{ url_for('admin_panel') }}'">Admin Panel</button></li>
             {% endif %}
         </ul>
     </div>
     <div style="float: right;">
         <ul>
-            <li style="display: inline-block;"><a href="{{ url_for('home') }}">Home</a></li>
-            <li style="display: inline-block;"><a href="{{ url_for('user_profile', username=username) }}">Profile</a></li>
-            <li style="display: inline-block;"><a href="{{ url_for('friend_requests') }}">Friend Requests</a></li>
-            <li style="display: inline-block;"><a href="{{ url_for('logout') }}" onclick="return confirm('Are you sure you want to log out?')">Log Out</a></li>
+            <li style="display: inline-block;"><button onclick="location.href='{{ url_for('home') }}'">Home</button></li>
+            <li style="display: inline-block;"><button onclick="location.href='{{ url_for('user_profile', username=username) }}'">Profile</button></li>
+            <li style="display: inline-block;"><button onclick="location.href='{{ url_for('friend_requests') }}'">Friend Requests</button></li>
+            <li style="display: inline-block;"><button onclick="location.href='{{ url_for('knowledge_repository') }}'">Knowledge Repository</button></li>
+            <button onclick="confirmLogout()">Log Out</button>
+        
         </ul>
     </div>
 </nav>
@@ -111,7 +196,7 @@
                 {% for friend in friends %}
                 <li>
                     <a href="#" onclick="startPrivateConversation('{{ friend }}')">{{ friend }}</a>
-                    <a href="#" onclick="removeFriend('{{ friend }}')">: Remove friend</a>
+                    <a href="#" onclick="removeFriend('{{ friend }}')">Remove friend</a>
                 </li>
                 {% endfor %}
             {% else %}
@@ -373,6 +458,11 @@
     
 </script>
 <script>
+    function confirmLogout() {
+        if (confirm('Are you sure you want to log out?')) {
+            location.href = '{{ url_for('logout') }}';
+        }
+    }
     // Function to fetch and update the friends list
     function updateFriendsList() {
         fetch('/api/friends-list')
@@ -389,7 +479,7 @@
                     const list_part = document.createElement('li');
                     // updating remove friend every five seconds as well 
                     list_part.innerHTML = `<a href="#" onclick="startPrivateConversation('${friend}')">${friend}</a> 
-                                        <a href="#" onclick="removeFriend('${friend}')">: Remove friend</a>`;
+                                        <a href="#" onclick="removeFriend('${friend}')">Remove friend</a>`;
                     list.appendChild(list_part);
                 });
             } else {
@@ -399,10 +489,6 @@
         })
         .catch(error => console.error('Error fetching friends:', error));
     }
-
-
-
-
     // Call updateFriendsList every 5 seconds
     setInterval(updateFriendsList, 5000);
 </script>

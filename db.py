@@ -273,3 +273,75 @@ def update_user_role(username, role):
 def get_all_users():
     with Session(engine) as session:
         return session.query(User).all()
+    
+#knowledge repository
+def get_all_articles():
+    with Session(engine) as session:
+        articles = session.query(Article).all()
+        return articles
+
+def insert_article(title, content, username):
+    with Session(engine) as session:
+        user = session.get(User, username)  # Retrieve the user based on username
+        if user:
+            article = Article(title=title, content=content, author_id=username)
+            session.add(article)
+            session.commit()
+            return True, "Article added successfully"
+        return False, "User not found"
+
+def update_article(article_id, title, content):
+    with Session(engine) as session:
+        article = session.get(Article, article_id)
+        if article:
+            article.title = title
+            article.content = content
+            session.commit()
+            return True, "Article updated successfully"
+        return False, "Article not found"
+
+def delete_article(article_id):
+    with Session(engine) as session:
+        article = session.get(Article, article_id)
+        if article:
+            session.delete(article)
+            session.commit()
+            return True, "Article deleted successfully"
+        return False, "Article not found"
+
+def insert_comment(content, article_id, username):
+    with Session(engine) as session:
+        article = session.get(Article, article_id)
+        user = session.get(User, username)
+        if article and user:
+            comment = Comment(content=content, article_id=article_id, author_id=username)
+            session.add(comment)
+            session.commit()
+            return True, "Comment added successfully"
+        return False, "Article or user not found"
+
+def delete_comment(comment_id):
+    with Session(engine) as session:
+        comment = session.get(Comment, comment_id)
+        if comment:
+            session.delete(comment)
+            session.commit()
+            return True, "Comment deleted successfully"
+        return False, "Comment not found"
+
+def get_article(article_id):
+    with Session(engine) as session:
+        return session.query(Article).filter(Article.id == article_id).first()
+
+def get_comments(article_id):
+    with Session(engine) as session:
+        return session.query(Comment).filter(Comment.article_id == article_id).all()
+    
+def get_user_role(username):
+    with Session(engine) as session:
+        user = session.query(User).filter(User.username == username).first()
+        if user:
+            return user.role.value
+        else:
+            return None  # Return None if the user is not found
+
