@@ -352,11 +352,14 @@ def knowledge_repository(article_id):
         return redirect(url_for('login'))  # Redirect to login page
     articles = db.get_all_articles()
     selected_article = db.get_article(article_id) if article_id else None
+    user = db.get_user(username)
+    #Convert enum to string here
+    user_role = user.role.name if hasattr(user.role, 'name') else str(user.role)
     if selected_article != None:
         author_role = db.get_user_role(selected_article.author_id)
     else:
         author_role = "student"
-    return render_template('knowledge_repository.jinja', username=username, articles=articles, selected_article=selected_article, author_role = author_role)
+    return render_template('knowledge_repository.jinja', username=username, articles=articles, selected_article=selected_article, author_role=author_role, user_role=user_role)
 
 
 @app.route("/add-article", methods=["POST"])
@@ -369,12 +372,16 @@ def add_article():
     flash(message)
     return redirect(url_for('knowledge_repository'))
 
-
-@app.route("/delete-article/<int:article_id>", methods=["POST"])
+@app.route('/delete-article/<int:article_id>', methods=['DELETE'])
 def delete_article(article_id):
-    db.delete_article(article_id)  # Delete the article from the database
-    flash('Article deleted successfully')
-    return redirect(url_for('articles'))
+    try:
+        success = db.delete_article(article_id)
+        if success:
+            return jsonify({'message': 'Article deleted successfully'}), 200
+        else:
+            return jsonify({'error': 'Article not found or could not be deleted'}), 404
+    except Exception as e:
+        return jsonify({'error': 'An error occurred', 'details': str(e)}), 500
 
 @app.route("/add-comment/<int:article_id>", methods=["POST"])
 def add_comment(article_id):
