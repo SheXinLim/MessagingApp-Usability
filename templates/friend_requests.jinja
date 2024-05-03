@@ -2,6 +2,26 @@
 
 {% block content %}
 <style>
+    html, body {
+        height: 100%;  /* Use full height of the window */
+        margin: 0;  /* Remove default margin */
+        display: flex;  /* Enable Flexbox */
+        flex-direction: column;  /* Align children vertically */
+        font-family: 'Open Sans', sans-serif;
+        background-color: #A8D0E6;  /* Light blue background */
+        overflow: auto
+    }
+
+    h1 {
+        font-family: 'Open Sans', sans-serif;
+        color: #F76C6c; /* Ensure text is readable on background */
+    }
+    p {
+        font-family: 'Open Sans', sans-serif;
+        color: white; /* Ensure text is readable on background */
+        font-size: 20px;
+        font-weight: bold;  /* Make text bold */
+    }
     .friend-requests-container {
         margin: 20px;
     }

@@ -86,6 +86,7 @@ class Comment(Base):
     content: Mapped[str] = mapped_column(Text, nullable=False)
     article_id: Mapped[int] = mapped_column(Integer, ForeignKey('article.id'), nullable=False)
     author_id: Mapped[int] = mapped_column(Integer, ForeignKey('user.username'), nullable=False)
+    author_role = Column(String)  # New column for the user's role
     user = relationship("User", foreign_keys=[author_id])
 
 # stateful counter used to generate the room id

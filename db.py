@@ -314,20 +314,25 @@ def insert_comment(content, article_id, username):
         article = session.get(Article, article_id)
         user = session.get(User, username)
         if article and user:
-            comment = Comment(content=content, article_id=article_id, author_id=username)
+            comment = Comment(content=content, article_id=article_id, author_id=username, author_role=user.role.name)
             session.add(comment)
             session.commit()
             return True, "Comment added successfully"
         return False, "Article or user not found"
 
-def delete_comment(comment_id):
+def delete_comment_db(comment_id):
     with Session(engine) as session:
         comment = session.get(Comment, comment_id)
-        if comment:
+        if not comment:
+            return False, "Comment not found"
+        try:
             session.delete(comment)
             session.commit()
             return True, "Comment deleted successfully"
-        return False, "Comment not found"
+        except Exception as e:
+            session.rollback()
+            return False, f"An error occurred: {str(e)}"
+
 
 def get_article(article_id):
     with Session(engine) as session:

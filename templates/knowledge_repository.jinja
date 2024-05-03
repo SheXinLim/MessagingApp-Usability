@@ -3,18 +3,32 @@
 {% block content %}
 <style>
     html, body {
-        height: 100%;  /* Use full height of the window */
-        margin: 10px;  /* Remove default margin */
-        display: flex;  /* Enable Flexbox */
-        flex-direction: column;  /* Align children vertically */
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
         font-family: 'Open Sans', sans-serif;
-        background-color: #A8D0E6;  /* Light blue background */
+        background-color: #A8D0E6;
+    }
+    
+    nav {
+        position: absolute;
+        width: 100%;
+        height: 60px; /* Fixed height */
+        background-color: beige;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 20px; /* Consistent padding */
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+        overflow: hidden; /* Prevents overflow */
     }
 
     h2{
         font-family: 'Open Sans', sans-serif;
     }
-
 
     h3{
         font-family: 'Open Sans', sans-serif;
@@ -31,14 +45,16 @@
     }
     
     .container {
+        margin-top: 60px;
         display: flex;
         justify-content: space-between;
         padding: 10px;
     }
 
     .sidebar {
+        overflow: auto;
         width: 30%;
-        border-right: 2px solid white;
+        border-right: 2px solid #eee;
         padding-right: 20px;
     }
 
@@ -50,9 +66,40 @@
 
     .article-preview {
         cursor: pointer;
-        padding: 1px 4px; /* Reduced padding */
+        padding: 1px;
         border-bottom: 1px solid #eee;
-        font-size: 14px; /* Smaller font size for article titles */
+        height: 80px; /* Fixed height for each preview */
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between; /* Helps distribute space between elements */
+        overflow: hidden; /* Ensures no content spills over */
+        background: #fff; /* Optional: background color for better readability */
+        margin-bottom: 2px; /* Space between articles */
+        padding-left: 5px;  /* Adds padding on the left for better text alignment */
+
+    }
+
+    .article-preview h3 {
+        margin-top: 2px;
+        font-size: 16px; /* Size for titles */
+        overflow: hidden;
+        text-overflow: ellipsis; /* Ellipsis for overflowed text */
+        margin-bottom: 0px; /* Space between title and content */
+        white-space: nowrap;  /* Ensures text stays in a single line */
+        padding-left: 5px;  /* Adds padding on the left for better text alignment */
+    }
+
+    .article-preview p {
+        margin-top: 0px;
+        line-height: 1.2;  /* Reduced line height to save space */
+        font-size: 14px; /* Consistent font size for preview text */
+        cursor: pointer;
+        border-bottom: 0px solid #eee;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding-left: 5px;  /* Adds padding on the left for better text alignment */
+        padding-right: 5px;  /* Adds padding on the left for better text alignment */
+    
     }
 
     .article-preview:hover {
@@ -63,9 +110,10 @@
         padding-left: 20px;
     }
     .comments {
-        margin-top: 20px;
+        margin-top: 10px;
         background-color: #f0f0f0;
         padding: 10px;
+        overflow-y: auto;  // Enable vertical scrolling
     }
     .comment {
         margin-bottom: 10px;
@@ -100,10 +148,6 @@
         color: black;
         text-decoration: none;
         cursor: pointer;
-    }
-    nav {
-        overflow: auto
-        padding: 2px 0;
     }
 
     #tabs button {
@@ -192,6 +236,26 @@
         box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Subtle shadow for 3D effect */
     }
 
+    .comment p {
+        font-size: 14px; /* Default font size for the entire paragraph */
+        color: black; /* Default text color */
+    }
+
+    .comment .comment-role {
+        font-size: 12px; /* Smaller font size for roles */
+        color: grey; /* Grey color for less emphasis */
+    }
+
+    .comment .comment-author {
+        font-size: 14px; /* Same as the default to keep it consistent */
+        font-weight: bold; /* Make the author name bold */
+    }
+
+    .comment .comment-content {
+        font-size: 14px; /* Same as the default to keep it consistent */
+    }
+
+
 </style>
 <nav style="padding: 2px 0; overflow: auto;">
 
@@ -220,9 +284,9 @@
         {% for article in articles %}
             <div class="article-preview" onclick="location.href='{{ url_for('knowledge_repository', article_id=article.id) }}'">
                 <h3 id="sidebar-title-{{ article.id }}">{{ article.title }}</h3>
-                <p id="sidebar-content-{{ article.id }}" style="font-size: 16px; color: black; ; margin: 5px 0;">{{ article.content.split()[:30]|join(' ') }}...</p>
+                <p id="sidebar-content-{{ article.id }}" style="font-size: 14px; color: black; margin: 1px 0;">{{ article.content.split()[:10]|join(' ') }}...</p>
                 <!-- Author name in smaller font -->
-                <p style="font-size: 14px; color: rgb(124, 124, 124); ; margin: 1px 0;">{{ article.author_id }}</p>
+                <p style="font-size: 14px; color: rgb(124, 124, 124);margin: 1px 0;">{{ article.author_id }}</p>
             </div>
         {% endfor %}
         </div>
@@ -241,17 +305,25 @@
                 <button class="button" id="edit-button-{{ selected_article.id }}" onclick="enableEditing({{ selected_article.id }})">Edit</button>
             {% endif %}
             <div class="comments">
-                <h3>Comments</h3>
-                {% for comment in selected_article.comments %}
+            <h3>Comments</h3>
+            {% for comment in comments %}
                 <div class="comment">
-                    <p>{{ comment.content }} - <small>{{ comment.author.username }}</small></p>
-                    {% if current_user.id == comment.author_id or current_user.is_staff %}
-                    <form action="{{ url_for('delete_comment', id=comment.id) }}" method="post">
-                        <button type="submit">Delete</button>
-                    </form>
+                    <p>
+                    <span class="comment-role">({{ comment.author_role }})</span>
+                    <span class="comment-author">{{ comment.author_id }}:</span>
+                    <span class="comment-content">{{ comment.content }}</span>
+                    </p>
+                    {% if user_role == 'ADMIN' or user_role == 'ACADEMIC' or user_role == 'ADMINISTRATIVE'%}
+                        <!-- Button to delete a comment -->
+                        <button onclick="deleteComment({{ comment.id }})" class="button delete-button">Delete</button>
                     {% endif %}
                 </div>
+                {% else %}
+                <p>No comments yet.</p>
                 {% endfor %}
+            </div>
+
+            <div class="comments">
                 <form action="{{ url_for('add_comment', article_id=selected_article.id) }}" method="post">
                     <input type="text" name="content" placeholder="Add a comment...">
                     <button type="submit">Comment</button>
@@ -274,6 +346,7 @@
         </div>
     </div>
 </div>
+
 
 <script>
     function confirmLogout() {
@@ -380,6 +453,23 @@
         }
     }
 
+    function deleteComment(commentId) {
+        if (confirm('Are you sure you want to delete this comment?')) {
+            fetch(`/delete-comment/${commentId}`, { method: 'POST' })
+            .then(response => {
+                if (response.ok) {
+                    alert('Comment deleted successfully.');
+                    location.reload(); // Reload the page to update the comment section
+                } else {
+                    throw new Error('Failed to delete the comment.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to delete the comment. Please try again.');
+            });
+        }
+    }
 
 </script>
 {% endblock %}
