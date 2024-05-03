@@ -14,28 +14,47 @@
     h2{
         font-family: 'Open Sans', sans-serif;
     }
+
+
+    h3{
+        font-family: 'Open Sans', sans-serif;
+        color: black; /* Ensure text is readable on background */
+        font-size: 18px;
+        margin: 8px 0;
+    }
+
     p {
         font-family: 'Open Sans', sans-serif;
         color: black; /* Ensure text is readable on background */
         font-size: 14px;
-        font-weight: bold;  /* Make text bold */
+        
     }
+    
     .container {
         display: flex;
         justify-content: space-between;
         padding: 10px;
     }
+
     .sidebar {
         width: 30%;
         border-right: 2px solid white;
         padding-right: 20px;
     }
+
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
     .article-preview {
         cursor: pointer;
         padding: 1px 4px; /* Reduced padding */
         border-bottom: 1px solid #eee;
         font-size: 14px; /* Smaller font size for article titles */
     }
+
     .article-preview:hover {
         background-color: #f9f9f9;
     }
@@ -64,7 +83,7 @@
         background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
     }
     .modal-content {
-        background-color: #fefefe;
+        background-color: white;
         margin: 15% auto; /* 15% from the top and centered */
         padding: 20px;
         border: 1px solid #888;
@@ -114,13 +133,77 @@
         background-color: #dddbcf; /* Darker blue on hover */
     }
 
+    .new-article {
+        padding: 8px 16px;  /* Increase padding for a larger button */
+        background-color: #F76C6c; /* Green background color */
+        color: white; /* White text color */
+        border: none;  /* Remove border */
+        cursor: pointer; /* Cursor indicates clickable */
+        font-size: 18px; /* Appropriate font size */
+        font-weight: bold; /* Bold text */
+        transition: background-color 0.2s; /* Smooth transition for hover effect */
+    }
+
+    .new-article:hover {
+        background-color: #ab4f4f; /* Slightly darker green on hover */
+    }
+
+    form {
+        width: 100%; /* Ensures form occupies all horizontal space of its parent */
+        display: flex;
+        flex-direction: column;
+        align-items: left; /* Center-aligns form items */
+    }
+
+    form input[type="text"] {
+        margin-top: 10px;
+        width: 90%;
+        padding: 10px; /* Padding for better text visibility and click area */
+        height: 40px; /* Fixed height for input */
+    }
+
+    form textarea {
+        margin-top: 10px;
+        width: 90%;
+        padding: 10px; /* Padding for better text visibility and ease of typing */
+        height: 150px; /* Increased height for textarea */
+    }
+
+    /* Optional: Add space at the bottom of the last element */
+    form button {
+        margin-top: 10px;
+        margin-bottom: 10px;
+        width: 20%; /* Adjust width as necessary */
+    }
+
+    .button {
+        margin-top: 10px;
+        padding: 5px 10px;
+        background-color: white; /* Green background for visibility */
+        color: black; /* White text for contrast */
+        border: none;
+        cursor: pointer; /* Cursor indicates it's clickable */
+        font-size: 14px; /* Appropriately sized font */
+        transition: background-color 0.3s, box-shadow 0.3s; /* Smooth transitions for hover effects */
+    }
+
+    .button:hover {
+        background-color: rgb(205, 205, 205); /* Darker shade of green on hover */
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Subtle shadow for 3D effect */
+    }
+
+
+
 </style>
 <nav style="padding: 2px 0; overflow: auto;">
 
     <div style="float: left;">
         <ul>
-            <li class="username" style="display: inline-block;">Username: {{ username }}</li>
+            <li class="username" style="display: inline-block;">Logged in as {{ username }}</li>
         </ul>
+    </div>
+        <div style="text-align: center; position: absolute; left: 50%; transform: translateX(-50%);">
+        <h1 style="margin: 0; font-size: 30px; color: #F76C6c; ">Knowledge Repository</h1>
     </div>
     <div style="float: right;">
         <ul>
@@ -132,18 +215,27 @@
 </nav>
 <div class="container">
     <div class="sidebar">
-        <h2>Articles</h2>
-            {% for article in articles %}
+        <div class="sidebar-header">
+            <h2>Articles</h2>
+            <button class="new-article" id="newArticleBtn">New Article</button>
+        </div>
+        {% for article in articles %}
             <div class="article-preview" onclick="location.href='{{ url_for('knowledge_repository', article_id=article.id) }}'">
-                <h3>{{ article.title }}</h3>
+                <h3 id="sidebar-title-{{ article.id }}">{{ article.title }}</h3>
+                <p id="sidebar-content-{{ article.id }}" style="font-size: 16px; color: black; ; margin: 5px 0;">{{ article.content.split()[:30]|join(' ') }}...</p>
+                <!-- Author name in smaller font -->
+                <p style="font-size: 14px; color: rgb(124, 124, 124); ; margin: 1px 0;">{{ article.author_id }}</p>
             </div>
-            {% endfor %}
+        {% endfor %}
         </div>
         <div class="main-content">
             {% if selected_article %}
-            <h1>{{ selected_article.title }}</h1>
-            <p>{{ selected_article.content }}</p>
-            <p>Author: {{ selected_article.author_id }}, Role: {{ author_role }}</p> <!-- Display author and role -->
+            <h1 id="article-title-{{ selected_article.id }}">{{ selected_article.title }}</h1>
+            <p id="article-content-{{ selected_article.id }}" style="font-size: 20px; color: black; ; margin: 1px 0;">{{ selected_article.content }}</p>
+            <p style="font-size: 14px; color: rgb(124, 124, 124); ; margin: 1px 0;">Author: {{ selected_article.author_id }}, Role: {{ author_role }}</p>
+            {% if username == selected_article.author_id %}
+                <button class="button" id="edit-button-{{ selected_article.id }}" onclick="enableEditing({{ selected_article.id }})">Edit</button>
+            {% endif %}
             <div class="comments">
                 <h3>Comments</h3>
                 {% for comment in selected_article.comments %}
@@ -164,9 +256,6 @@
             {% endif %}
         </div>
     </div>
-
-    <!-- Button to open the modal -->
-    <button id="newArticleBtn">New Article</button>
     
     <!-- The Modal -->
     <div id="newArticleModal" class="modal">
@@ -213,5 +302,61 @@
             modal.style.display = "none";
         }
     }
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.edit-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const articleId = this.dataset.articleId;
+                enableEditing(articleId);
+            });
+        });
+    });
+
+    function enableEditing(articleId) {
+        const titleElement = document.getElementById(`article-title-${articleId}`);
+        const contentElement = document.getElementById(`article-content-${articleId}`);
+        const editButton = document.getElementById(`edit-button-${articleId}`);
+
+        const title = titleElement.innerText;
+        const content = contentElement.innerText;
+
+        titleElement.innerHTML = `<input type='text' id='edit-title-${articleId}' value='${title}' style='width: 100%;'>`;
+        contentElement.innerHTML = `<textarea id='edit-content-${articleId}' style='width: 100%; height: 100px;'>${content}</textarea>`;
+
+        editButton.innerText = 'Save';
+        editButton.setAttribute('onclick', `saveEdits(${articleId})`);
+    }
+
+    function saveEdits(articleId) {
+        const editedTitle = document.getElementById(`edit-title-${articleId}`).value;
+        const editedContent = document.getElementById(`edit-content-${articleId}`).value;
+        const editButton = document.getElementById(`edit-button-${articleId}`);
+
+        // Assuming you have an API endpoint to handle POST requests
+        fetch(`/save-article/${articleId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: editedTitle, content: editedContent })
+        })
+        .then(response => {
+            if (response.ok) {
+                document.getElementById(`article-title-${articleId}`).innerText = editedTitle;
+                document.getElementById(`article-content-${articleId}`).innerText = editedContent;
+                editButton.innerText = 'Edit';
+                editButton.setAttribute('onclick', `enableEditing(${articleId})`);
+                 // Update the sidebar title and content snippet
+                const sidebarTitleElement = document.getElementById(`sidebar-title-${articleId}`);
+                const sidebarContentElement = document.getElementById(`sidebar-content-${articleId}`);
+                if (sidebarTitleElement) {
+                    sidebarTitleElement.innerText = editedTitle;
+                }
+                if (sidebarContentElement) {
+                    // Update with the first 30 words of the new content
+                    sidebarContentElement.innerText = editedContent.split(' ').slice(0, 30).join(' ') + '...';
+                }
+            }
+        })
+        .catch(error => console.error('Failed to save the article:', error));
+    }
+
 </script>
 {% endblock %}
