@@ -192,8 +192,6 @@
         box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Subtle shadow for 3D effect */
     }
 
-
-
 </style>
 <nav style="padding: 2px 0; overflow: auto;">
 
@@ -233,7 +231,13 @@
             <h1 id="article-title-{{ selected_article.id }}">{{ selected_article.title }}</h1>
             <p id="article-content-{{ selected_article.id }}" style="font-size: 20px; color: black; ; margin: 1px 0;">{{ selected_article.content }}</p>
             <p style="font-size: 14px; color: rgb(124, 124, 124); ; margin: 1px 0;">Author: {{ selected_article.author_id }}, Role: {{ author_role }}</p>
-            {% if username == selected_article.author_id %}
+            {% if user_role == 'ADMIN' or user_role == 'ACADEMIC' or user_role == 'ADMINISTRATIVE' %}
+                <!-- Delete button for admin roles -->
+                <button class="button" onclick="deleteArticle({{ selected_article.id }}); event.stopPropagation();" style="vertical-align: top;">
+                    Delete
+                </button>
+            {% endif %}
+            {% if username == selected_article.author_id or user_role == 'ADMIN' or user_role == 'ACADEMIC' or user_role == 'ADMINISTRATIVE' %}
                 <button class="button" id="edit-button-{{ selected_article.id }}" onclick="enableEditing({{ selected_article.id }})">Edit</button>
             {% endif %}
             <div class="comments">
@@ -357,6 +361,25 @@
         })
         .catch(error => console.error('Failed to save the article:', error));
     }
+
+    function deleteArticle(articleId) {
+        if (confirm('Are you sure you want to delete this article?')) {
+            fetch(`/delete-article/${articleId}`, { method: 'DELETE' })
+                .then(response => {
+                    if (response.ok) {
+                        alert('Article deleted successfully.');
+                        location.reload(); // Optionally reload the page or remove the article element from the DOM
+                    } else {
+                        throw new Error('Failed to delete the article.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to delete the article. Please try again.');
+                });
+        }
+    }
+
 
 </script>
 {% endblock %}
