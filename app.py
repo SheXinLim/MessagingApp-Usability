@@ -369,15 +369,6 @@ def add_article():
     flash(message)
     return redirect(url_for('knowledge_repository'))
 
-@app.route("/edit-article/<int:article_id>", methods=["GET", "POST"])
-def edit_article(article_id):
-    if request.method == 'POST':
-        title = request.form.get('title')
-        content = request.form.get('content')
-        db.update_article(article_id, title, content)  # Update the article in the database
-        return redirect(url_for('articles'))
-    article = db.get_article(article_id)  # Retrieve the article to edit
-    return render_template("edit_article.jinja", article=article)
 
 @app.route("/delete-article/<int:article_id>", methods=["POST"])
 def delete_article(article_id):
@@ -404,7 +395,34 @@ def article_detail(article_id):
     comments = db.get_comments(article_id)  # Assuming this function fetches related comments
     return render_template('article_detail.jinja', article=article, comments=comments)
 
+@app.route("/edit-article/<int:article_id>", methods=["GET", "POST"])
+def edit_article(article_id):
+    if request.method == 'POST':
+        title = request.form.get('title')
+        content = request.form.get('content')
+        db.update_article(article_id, title, content)  # Update the article in the database
+        return redirect(url_for('articles'))
+    article = db.get_article(article_id)  # Retrieve the article to edit
+    return render_template("knowledge_repository.jinja", article=article)
 
+@app.route("/save-article/<int:article_id>", methods=['POST'])
+def save_article(article_id):
+    # Ensure the request is in JSON format
+    if not request.is_json:
+        return jsonify({'message': 'Missing JSON in request'}), 400
+    
+    data = request.get_json()
+    title = data.get('title')
+    content = data.get('content')
+
+    # Now use the function from db.py
+    success, message = db.update_article(article_id, title, content)
+    if not success:
+        if message == "Article not found":
+            return jsonify({'message': message}), 404
+        return jsonify({'message': message}), 400
+
+    return jsonify({'message': 'Article updated successfully'}), 200
 if __name__ == '__main__':
     # socketio.run(app)
     # for HTTPS Communication
