@@ -355,11 +355,17 @@ def knowledge_repository(article_id):
     user = db.get_user(username)
     #Convert enum to string here
     user_role = user.role.name if hasattr(user.role, 'name') else str(user.role)
+
+    # Fetch comments for the selected article
+    if selected_article:
+        comments = db.get_comments(selected_article.id)
+    else:
+        comments = []
     if selected_article != None:
         author_role = db.get_user_role(selected_article.author_id)
     else:
         author_role = "student"
-    return render_template('knowledge_repository.jinja', username=username, articles=articles, selected_article=selected_article, author_role=author_role, user_role=user_role)
+    return render_template('knowledge_repository.jinja', username=username, articles=articles, selected_article=selected_article, author_role=author_role, user_role=user_role, comments=comments)
 
 
 @app.route("/add-article", methods=["POST"])
@@ -386,15 +392,29 @@ def delete_article(article_id):
 @app.route("/add-comment/<int:article_id>", methods=["POST"])
 def add_comment(article_id):
     content = request.form.get('content')
-    author_id = session.get('username')  # Assume we store user ID in session
+    author_id = session.get('username')
     db.insert_comment(content, article_id, author_id)  # Insert the comment
-    return redirect(url_for('articles'))
+    return redirect(url_for('knowledge_repository', article_id=article_id))
 
 @app.route("/delete-comment/<int:comment_id>", methods=["POST"])
 def delete_comment(comment_id):
-    db.delete_comment(comment_id)  # Delete the comment from the database
-    flash('Comment deleted successfully')
-    return redirect(url_for('articles'))
+    username = session.get("username")
+    if not username:
+        return jsonify({'error': 'You must be logged in to perform this action'}), 403
+
+    user = db.get_user(username)
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    if user.role.name in ['ADMIN', 'ACADEMIC', 'ADMINISTRATIVE']:  # Ensure role is checked correctly
+        success, message = db.delete_comment_db(comment_id)  # Assumed correct db function call
+        if success:
+            return jsonify({'message': message}), 200
+        else:
+            return jsonify({'error': message}), 404
+    else:
+        return jsonify({'error': 'You do not have permission to delete comments'}), 403
+
 
 @app.route("/article/<int:article_id>")
 def article_detail(article_id):
