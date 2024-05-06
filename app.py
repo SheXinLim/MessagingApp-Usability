@@ -123,6 +123,7 @@ def signup_user():
 def page_not_found(_):
     return render_template('404.jinja'), 404
 
+
 # home page, where the messaging app is
 @app.route("/home")
 def home():
@@ -133,11 +134,18 @@ def home():
     sent_requests = db.get_sent_friend_requests(username)
     friends = db.get_friends(username)  # Get the list of friends
     user = db.get_user(username)
+    friends_roles = []  # Initialize an empty list for friend roles
+    
+    # Assuming you have a function to get roles for each friend
+    for friend in friends:
+        role = db.get_user_role(friend)
+        friends_roles.append(role)
+
     #Convert enum to string here
     user_role = user.role.name if hasattr(user.role, 'name') else str(user.role)
 
     return render_template("home.jinja", username=username, received_requests=received_requests, 
-                           sent_requests=sent_requests, friends=friends, user_role=user_role)
+                           sent_requests=sent_requests, friends=list(zip(friends, friends_roles)), user_role=user_role)
 
 
 # friend req
@@ -223,13 +231,21 @@ def api_friend_requests():
         'sent_requests': sent_requests_data
     })
 
+
 @app.route('/api/friends-list')
 def get_friends_list():
     username = session.get('username')
     if not username:
         return jsonify({'error': 'Not logged in'}), 403
     friends = db.get_friends(username)  # This should return a list of friend usernames
-    return jsonify({'friends': friends})
+    friends_roles = []  # Initialize an empty list for friend roles
+    
+    # Assuming you have a function to get roles for each friend
+    for friend in friends:
+        role = db.get_user_role(friend)
+        friends_roles.append(role)
+
+    return jsonify({'friends': list(zip(friends, friends_roles))})
 
 @app.route('/get_salt', methods=['POST'])
 def get_salt():

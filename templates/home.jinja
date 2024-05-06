@@ -193,9 +193,10 @@
         <h2>Friends</h2>
         <ul>
             {% if friends %}
-                {% for friend in friends %}
+                {% for friend, role in friends %}
                 <li>
                     <a href="#" onclick="startPrivateConversation('{{ friend }}')">{{ friend }}</a>
+                    <span>Role: {{ role }}</span>
                     <a href="#" onclick="removeFriend('{{ friend }}')">Remove friend</a>
                 </li>
                 {% endfor %}
@@ -203,7 +204,6 @@
                 <li>No friends yet.</li>
             {% endif %}
         </ul>
-
     </section>
 
 
@@ -478,8 +478,9 @@
                 data.friends.forEach(friend => {
                     const list_part = document.createElement('li');
                     // updating remove friend every five seconds as well 
-                    list_part.innerHTML = `<a href="#" onclick="startPrivateConversation('${friend}')">${friend}</a> 
-                                        <a href="#" onclick="removeFriend('${friend}')">Remove friend</a>`;
+                    list_part.innerHTML = `<a href="#" onclick="startPrivateConversation('${friend[0]}')">${friend[0]}</a>
+                                                     <span>Role: ${friend[1]}</span>
+                                        <a href="#" onclick="removeFriend('${friend[0]}')">Remove friend</a>`;
                     list.appendChild(list_part);
                 });
             } else {
