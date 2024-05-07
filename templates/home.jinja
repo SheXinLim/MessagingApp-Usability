@@ -20,7 +20,12 @@
         text-align: center;  /* Center the heading text horizontally */
         font-family: 'Open Sans', sans-serif;
         display: flex; /* Use Flexbox inside h1 */
+        justify-content: space-between; /* Spread items along the main axis */
+
+        /* Set padding or margin for left and right spacing */
+        padding: 0 500px; /* Adjust the value as needed */
     }
+
     p {
         font-family: 'Open Sans', sans-serif;
         color: black; /* Ensure text is readable on background */
@@ -41,10 +46,11 @@
 
     #message_box {
         border: 1px solid black; 
-        height: 400px; 
-        width: 800px; 
+        height: 500px; 
+        width: 1160px; 
         overflow: auto;
         padding: 2px;
+        background-color: whitesmoke; 
     }
 
     #friends-list {
@@ -130,6 +136,14 @@
     #friend_request_box {
         margin-top: 10px;
     }
+
+    #chat_box {
+        margin-top: 75px; /* Adjust the value as needed */
+    }
+    #input_box {
+        margin-top: 75px; /* Adjust the value as needed */
+    }
+
 </style>
 
 <!--Navbar, you'll see the username here-->
@@ -166,7 +180,7 @@
     but I wrote this code a year ago and I don't want to break anything...-->
     <section id="chat_box">
         <p class="text">Chat with: </p>
-        <input id="receiver" placeholder="username">
+        <input id="receiver" placeholder="type username here">
         <!-- MDN says its bad practice to use the onclick attribute,
         but we're using it anyways coz its easy :)-->
         <button onclick="join_room()">Chat</button>
@@ -176,7 +190,7 @@
     this means the input box is "invisible" initially-->
     <section id="input_box" style="display: none" >
         <p class="text">Message: </p>
-        <input id="message" placeholder="message">
+        <input id="message" placeholder="type message here">
         <button onclick="send()">Send</button>
         <button onclick="leave()">Leave Room</button>
     </section>
@@ -184,7 +198,7 @@
     <!-- Section for sending friend requests -->
     <section id="friend_request_box">
         <p class="text">Send Friend Request to:</p>
-        <input id="friend_username" placeholder="Username">
+        <input id="friend_username" placeholder="type username here">
         <button onclick="sendFriendRequest()">Send Request</button>
     </section>
 
