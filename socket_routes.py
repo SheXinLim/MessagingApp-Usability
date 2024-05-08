@@ -94,6 +94,7 @@ joined_users = set()
 room_relationships = {}
 
 
+
 @socketio.on("join")
 def join(sender_name, receiver_name):
     receiver = db.get_user(receiver_name)
@@ -206,43 +207,48 @@ def send(username, message, room_id):
 # def send(username, receiver, message, room_id):
     if username not in joined_users:
         return "You must join a room before sending messages."
-    
+
     # Check if the sender or receiver have joined the room
     room_members = room.get_room_members(room_id)
+    
+    # Get the receiver's username
+    receiver_name = None
+    for name in room_members:
+        if name != username:
+            receiver_name = name
+            break
+    
+    
     if not room_members or username not in room_members:
         #message only to the sender's room
         emit("incoming", f"{username}: {message}")
+
+        print(f"this is happening whats up?")
+
+        with Session() as session:  # Create a session instance
+            new_message = Message(sender_username=username, receiver_username=receiver_name, content=message)
+            session.add(new_message)
+            session.commit()
+
+        print(f"this is happening -  {username}: {message}")
+
         return
 
     # Check if the sender has left the room
     if user_left_status.get(username, False):
         return  # Don't store or emit the message if the sender has left the room
     
-    # Check if the sender and receiver have joined the room with each other's usernames
-    sender_name = username
-    receiver_name = None
-    for name, relationships in room_relationships.items():
-        if sender_name in relationships:
-            receiver_name = name
-            break
 
     # Emit the message to the room
     emit("incoming", f"{username}: {message}", to=room_id)
 
-    # # Store the message in the database
-    # with Session() as session:
-    #     new_message = Message(sender_username=username, content=message)
-    #     session.add(new_message)
-    #     session.commit()
-
-
+    
     with Session() as session:  # Create a session instance
         new_message = Message(sender_username=username, receiver_username=receiver_name, content=message)
         session.add(new_message)
         session.commit()
 
         print(f"Encrypted message stored in the database: {username}: {message}")
-
 
 
 
