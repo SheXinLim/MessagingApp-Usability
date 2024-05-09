@@ -43,7 +43,7 @@ def connect():
         return
 
     join_room(room_id)
-
+    db.set_user_online(username, True)
     with Session() as session:
 
         # Fetch messages sent by the user
@@ -71,6 +71,7 @@ def disconnect():
     
     # Leave the room
     leave_room(room_id)
+    db.set_user_online(username, False)
 
     # Clear any data related to the conversation
     if username in room_relationships:
@@ -81,15 +82,7 @@ def disconnect():
         session.add(Message(sender_username=username, content=f"{username} has disconnected"))
         session.commit()
 
-
-
-
 joined_users = set()
-
-
-
-
-
 
 room_relationships = {}
 

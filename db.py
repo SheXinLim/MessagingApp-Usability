@@ -350,3 +350,9 @@ def get_user_role(username):
         else:
             return None  # Return None if the user is not found
 
+def set_user_online(username):
+    with Session() as session:
+        user = session.query(User).filter_by(username=username).first()
+        if user:
+            user.online = 1 # Assuming 'online' is a Boolean field in your User model
+            session.commit()

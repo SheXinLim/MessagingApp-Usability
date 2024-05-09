@@ -10,7 +10,7 @@ Prisma docs also looks so much better in comparison
 or use SQLite, if you're not into fancy ORMs (but be mindful of Injection attacks :) )
 '''
 
-from sqlalchemy import String, Column, Integer, ForeignKey, Enum, DateTime, Text
+from sqlalchemy import Boolean, String, Column, Integer, ForeignKey, Enum, DateTime, Text
 from sqlalchemy.orm import relationship, DeclarativeBase, Mapped, mapped_column
 from typing import Dict
 from datetime import datetime
@@ -41,6 +41,7 @@ class User(Base):
     failed_attempts: Mapped[int] = mapped_column(Integer, default=0)
     lockout_until: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     role: Mapped[RoleType] = mapped_column(Enum(RoleType), nullable=False)
+    online: Mapped[bool] = mapped_column(Boolean, default=False) 
 
 class FriendRequest(Base):
     __tablename__ = "friend_request"
