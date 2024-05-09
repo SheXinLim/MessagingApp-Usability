@@ -42,7 +42,6 @@ def apply_csp(response):
     response.headers['Content-Security-Policy'] = csp_policy_string(policy)
     return response
 
-
 # secret key used to sign the session cookie
 app.config['SECRET_KEY'] = secrets.token_hex()
 socketio = SocketIO(app)
@@ -395,15 +394,20 @@ def knowledge_repository(article_id):
 
 @app.route("/add-article", methods=["POST"])
 def add_article():
-    title = request.form.get('title')
-    content = request.form.get('content')
+    data = request.get_json()
+    if not data:
+        return jsonify({"success": False, "message": "No data provided"}), 400
+
+    title = data.get('title')
+    content = data.get('content')
     author_id = session.get('username')
+
     success, message = db.insert_article(title, content, author_id)
-    return redirect(url_for('knowledge_repository'))
-    # if success:
-    #     return jsonify({"success": True, "message": message}), 200
-    # else:
-    #     return jsonify({"success": False, "message": message}), 400
+    if success:
+        return jsonify({"success": True, "message": message}), 200
+    else:
+        return jsonify({"success": False, "message": message}), 400
+
 
 @app.route('/delete-article/<int:article_id>', methods=['DELETE'])
 def delete_article(article_id):
@@ -416,12 +420,26 @@ def delete_article(article_id):
     except Exception as e:
         return jsonify({'error': 'An error occurred', 'details': str(e)}), 500
 
+# @app.route("/add-comment/<int:article_id>", methods=["POST"])
+# def add_comment(article_id):
+#     content = request.form.get('content')
+#     author_id = session.get('username')
+#     db.insert_comment(content, article_id, author_id)  # Insert the comment
+#     return redirect(url_for('knowledge_repository', article_id=article_id))
+
 @app.route("/add-comment/<int:article_id>", methods=["POST"])
 def add_comment(article_id):
     content = request.form.get('content')
     author_id = session.get('username')
-    db.insert_comment(content, article_id, author_id)  # Insert the comment
-    return redirect(url_for('knowledge_repository', article_id=article_id))
+    if not content:
+        return jsonify({"success": False, "message": "Content cannot be empty"}), 400
+
+    success, message = db.insert_comment(content, article_id, author_id)  # Insert the comment
+    if success:
+        return jsonify({"success": True, "message": message}), 200
+    else:
+        return jsonify({"success": False, "message": message}), 400
+
 
 @app.route("/delete-comment/<int:comment_id>", methods=["POST"])
 def delete_comment(comment_id):

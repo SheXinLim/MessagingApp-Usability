@@ -301,22 +301,16 @@
         });
     }); 
 
-
-    
     // Here's the Socket IO part of the code
     // things get a bit complicated here so brace yourselves :P
     let username = "{{ username }}";
     let hashedpass = "{{ hashed_password }}";
 
-    
 
     Cookies.set('username', username);
 
     // initializes the socket
     const socket = io();
-
-
-   
 
     // we emit a join room event to the server to join a room
     function join_room() {
@@ -343,7 +337,6 @@
      
     }
      
-    
     function send() {
         let message = $("#message").val();
         $("#message").val("");
@@ -355,12 +348,14 @@
         socket.emit("send", username, message, room_id);  
     }
 
-
     socket.on("incoming", (message, color="black") => {
        add_message(message, color);
     });
 
-
+    socket.on('error', function(data) {
+        alert(data.message); // Show an alert with the error message
+    });
+    
     function removeFriend(friendUsername) {
         if (confirm(`Are you sure you want to remove ${friendUsername} from your friends list?`)) {
             fetch(`/remove-friend/${friendUsername}`, {
@@ -388,14 +383,16 @@
     }
 
     function startPrivateConversation(friendUsername) {
-        socket.emit("join", username, friendUsername, (roomId) => {
-            if (roomId !== null) {
-                room_id = roomId;
+        socket.emit("join", username, friendUsername, (response) => {
+            if (response.success) {
+                room_id = response.room_id;
                 Cookies.set("room_id", room_id);
                 $("#chat_box").hide();
                 $("#input_box").show();
             } else {
-                alert("Failed to start a private conversation.");
+                if (response.message) {
+                    alert(response.message); // Display the error message from the server
+                }
             }
         });
     }
