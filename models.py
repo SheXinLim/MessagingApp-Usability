@@ -41,7 +41,8 @@ class User(Base):
     failed_attempts: Mapped[int] = mapped_column(Integer, default=0)
     lockout_until: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     role: Mapped[RoleType] = mapped_column(Enum(RoleType), nullable=False)
-    online: Mapped[bool] = mapped_column(Boolean, default=False) 
+    online: Mapped[bool] = mapped_column(Boolean, default=False)
+    muted: Mapped[bool] = mapped_column(Boolean, default=False) 
 
 class FriendRequest(Base):
     __tablename__ = "friend_request"
