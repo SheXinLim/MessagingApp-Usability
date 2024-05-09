@@ -350,9 +350,23 @@ def get_user_role(username):
         else:
             return None  # Return None if the user is not found
 
-def set_user_online(username):
-    with Session() as session:
+def set_user_online(username, is_online):
+    with Session(engine) as session:
+        try:
+            user = session.query(User).filter_by(username=username).one_or_none()
+            if user:
+                user.online = is_online
+                session.commit()
+                print(f"User {username} online status updated to {is_online}")
+            else:
+                print(f"No user found with username: {username}")
+        except Exception as e:
+            print(f"An error occurred: {e}")
+
+def get_user_online(username):
+    with Session(engine) as session:
         user = session.query(User).filter_by(username=username).first()
         if user:
-            user.online = 1 # Assuming 'online' is a Boolean field in your User model
-            session.commit()
+            return user.online
+        else:
+            return None

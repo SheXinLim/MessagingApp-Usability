@@ -38,12 +38,17 @@ user_left_status = {}
 @socketio.on('connect')
 def connect():
     username = request.cookies.get("username")
+    try:
+        db.set_user_online(username, True)
+        print(f"Debug: Set {username} online.")  # Debug print
+    except Exception as e:
+        print(f"Debug: Error setting user online: {e}")  # Debug print
+
     room_id = request.cookies.get("room_id")
     if room_id is None or username is None:
         return
 
     join_room(room_id)
-    db.set_user_online(username, True)
     with Session() as session:
 
         # Fetch messages sent by the user
@@ -62,6 +67,11 @@ def connect():
 @socketio.on('disconnect')
 def disconnect():
     username = request.cookies.get("username")
+    try:
+        db.set_user_online(username, False)
+        print(f"Debug: Set {username} offline.")  # Debug print
+    except Exception as e:
+        print(f"Debug: Error setting user offline: {e}")  # Debug print
     room_id = request.cookies.get("room_id")
     if room_id is None or username is None:
         return
@@ -71,7 +81,6 @@ def disconnect():
     
     # Leave the room
     leave_room(room_id)
-    db.set_user_online(username, False)
 
     # Clear any data related to the conversation
     if username in room_relationships:

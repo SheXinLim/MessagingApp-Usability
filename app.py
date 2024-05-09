@@ -135,17 +135,21 @@ def home():
     friends = db.get_friends(username)  # Get the list of friends
     user = db.get_user(username)
     friends_roles = []  # Initialize an empty list for friend roles
+    friend_online =[ ]
     
-    # Assuming you have a function to get roles for each friend
     for friend in friends:
         role = db.get_user_role(friend)
         friends_roles.append(role)
+
+    for friend in friends:
+        online  = db.get_user_online(friend)
+        friend_online.append(online)
 
     #Convert enum to string here
     user_role = user.role.name if hasattr(user.role, 'name') else str(user.role)
 
     return render_template("home.jinja", username=username, received_requests=received_requests, 
-                           sent_requests=sent_requests, friends=list(zip(friends, friends_roles)), user_role=user_role)
+                           sent_requests=sent_requests, friends=list(zip(friends, friends_roles, friend_online)), user_role=user_role)
 
 
 # friend req
@@ -239,13 +243,20 @@ def get_friends_list():
         return jsonify({'error': 'Not logged in'}), 403
     friends = db.get_friends(username)  # This should return a list of friend usernames
     friends_roles = []  # Initialize an empty list for friend roles
+    friends_online = []
     
     # Assuming you have a function to get roles for each friend
     for friend in friends:
         role = db.get_user_role(friend)
         friends_roles.append(role)
 
-    return jsonify({'friends': list(zip(friends, friends_roles))})
+      # Assuming you have a function to get roles for each friend
+    for friend in friends:
+        online = db.get_user_online(friend)
+        friends_online.append(online)
+
+
+    return jsonify({'friends': list(zip(friends, friends_roles, friends_online))})
 
 @app.route('/get_salt', methods=['POST'])
 def get_salt():
@@ -467,12 +478,6 @@ def save_article(article_id):
 
     return jsonify({'message': 'Article updated successfully'}), 200
 
-@app.template_filter('safe_role_name')
-def safe_role_name(user):
-    # Check if user and user.role both exist and have the attributes expected
-    if hasattr(user, 'role') and hasattr(user.role, 'name'):
-        return user.role.name
-    return "Unknown"  # or any other fallback string
 
 if __name__ == '__main__':
     # socketio.run(app)
