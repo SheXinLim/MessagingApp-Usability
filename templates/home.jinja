@@ -163,6 +163,9 @@
             {% if user_role == 'ADMIN'%}
                 <li style="display: inline-block;"><button onclick="location.href='{{ url_for('admin_panel') }}'">Admin Panel</button></li>
             {% endif %}
+            {% if user_role == 'ADMIN' or user_role == 'ACADEMIC' or user_role == 'ADMINISTRATIVE' %}
+                <li style="display: inline-block;"><button onclick="location.href='{{ url_for('mute_user') }}'">Mute/Unmute User</button></li>
+            {% endif %}
         </ul>
     </div>
     <div style="float: right;">

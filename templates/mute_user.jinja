@@ -1,0 +1,137 @@
+{% extends 'base.jinja' %}
+
+{% block content %}
+<style>
+    html, body {
+        margin-left: 10px;
+        margin: 0;  /* Remove default margin */
+        padding: 0; /* Ensure no padding is applied */
+        display: flex;  /* Enable Flexbox */
+        flex-direction: column;  /* Align children vertically */
+        font-family: 'Open Sans', sans-serif;
+        background-color: #A8D0E6;  /* Light blue background */
+        overflow: auto
+    }
+
+    h1 {
+        margin-left: 5px;
+        margin-bottom: 10px; 
+        height: 100%;  /* Full width to ensure center alignment has context */
+        font-family: 'Open Sans', sans-serif;
+        color: #F76C6c; /* Ensure text is readable on background */
+    }
+    p {
+        margin: 0px;  /* Remove default margin */
+        font-family: 'Open Sans', sans-serif;
+        color: white; /* Ensure text is readable on background */
+        font-size: 20px;
+        font-weight: bold;  /* Make text bold */
+    }
+
+    .mute-update-form{
+        margin-left: 10px;
+    }
+
+    .mute-update-form div {
+        margin-bottom: 6px; 
+    }
+
+    button {
+        font-family: 'Open Sans', sans-serif;
+        padding: 5px 10px;
+        background-color: white; 
+        color: black;
+        border: none;
+        cursor: pointer;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        margin-right: 10px;  
+        font-size: 15px;
+        transition: background-color 0.3s, color 0.3s;
+    }
+
+    button:hover {
+        background-color: #dddbcf; /* Darker blue on hover */
+    }
+
+    .update-button {
+        padding: 2px 5px;  /* Slightly larger padding */
+        background-color: white; 
+        color: black;
+        font-size: 12px;
+        transition: background-color 0.2s, box-shadow 0.2s; /* Smooth transition for hover effects */
+    }
+
+    .update-button:hover {
+        background-color: #dddbcf;
+    }
+
+    .header {
+        display: flex;  /* Use Flexbox for horizontal layout */
+        justify-content: space-between;  /* Space elements out between */
+        align-items: center;  /* Center align items vertically */
+        width: 100%;  /* Full width */
+    }
+
+</style>
+
+<div class="header">
+    <h1>Mute or Unmute User</h1>
+    <div class="buttons">
+        <button onclick="location.href='{{ url_for('home') }}'">Home</button>
+        <button onclick="confirmLogout()">Log Out</button>
+    </div>
+</div>
+
+<div class="container">
+    {% for user in users %}
+        <form class="mute-update-form" action="{{ url_for('update_user_mute_status') }}" method="post" onsubmit="updateUserMuteStatus(event)">
+            <div>
+                
+                <label>{{ user.username }} (Current Status: {{ 'Muted' if user.muted else 'Unmuted' }})</label>
+                <select name="new_status">
+                    <option value="true" {% if user.muted == false %}selected{% endif %}>mute</option>
+                    <option value="false" {% if user.muted == true %}selected{% endif %}>unmute</option>
+                </select>
+                <input type="hidden" name="username" value="{{ user.username }}">
+                <button type="submit" class="update-button">Update</button>
+            </div>
+        </form>
+    {% endfor %}
+</div>
+<script>
+
+function updateUserMuteStatus(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+
+    fetch(form.action, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message); // Show success message
+            location.reload();
+        } else {
+            alert(data.message); // Show error message
+        }
+    })
+    .catch(error => {
+        console.error('Error updating user role:', error);
+        alert('An error occurred while attempting to update the user role. Please try again.');
+    });
+}
+
+function confirmLogout() {
+    if (confirm('Are you sure you want to log out?')) {
+        location.href = '{{ url_for('logout') }}';
+    }
+}
+</script>
+
+{% endblock %}
+

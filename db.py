@@ -283,6 +283,10 @@ def get_all_articles():
 def insert_article(title, content, username):
     with Session(engine) as session:
         user = session.get(User, username)  # Retrieve the user based on username
+        loggedin_user = get_user(username)
+        if loggedin_user.muted == True:
+            return False, "You have been muted"
+
         if user:
             article = Article(title=title, content=content, author_id=username)
             session.add(article)
@@ -313,6 +317,9 @@ def insert_comment(content, article_id, username):
     with Session(engine) as session:
         article = session.get(Article, article_id)
         user = session.get(User, username)
+        loggedin_user = get_user(username)
+        if loggedin_user.muted == True:
+            return False, "You have been muted"
         if article and user:
             comment = Comment(content=content, article_id=article_id, author_id=username, author_role=user.role.name)
             session.add(comment)
@@ -363,6 +370,23 @@ def set_user_online(username, is_online):
         except Exception as e:
             print(f"An error occurred: {e}")
 
+def mute_user(username, mute_status):
+    with Session(engine) as session:
+        try:
+            user = session.query(User).filter_by(username=username).one_or_none()
+            if user:
+                user.muted = mute_status
+                session.commit()
+                print(f"User {username} mute status updated to {mute_status}")
+                return True
+            else:
+                print(f"No user found with username: {username}")
+                return False
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            session.rollback()
+            return False
+        
 def get_user_online(username):
     with Session(engine) as session:
         user = session.query(User).filter_by(username=username).first()

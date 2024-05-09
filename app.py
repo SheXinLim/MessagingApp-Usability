@@ -135,7 +135,7 @@ def home():
     friends = db.get_friends(username)  # Get the list of friends
     user = db.get_user(username)
     friends_roles = []  # Initialize an empty list for friend roles
-    friend_online =[ ]
+    friend_online = []
     
     for friend in friends:
         role = db.get_user_role(friend)
@@ -334,7 +334,6 @@ def create_default_admin():
 
 @app.route('/admin-panel')
 def admin_panel():
-    # Optional: Check if the user is logged in and is an admin
     username = session.get('username')
     if not username:
         flash('You must be logged in to access the admin panel.')
@@ -394,16 +393,17 @@ def knowledge_repository(article_id):
         author_role = "student"
     return render_template('knowledge_repository.jinja', username=username, articles=articles, selected_article=selected_article, author_role=author_role, user_role=user_role, comments=comments)
 
-
 @app.route("/add-article", methods=["POST"])
 def add_article():
     title = request.form.get('title')
     content = request.form.get('content')
-    author_id = session.get('username')  # Assuming username identifies the user
-
+    author_id = session.get('username')
     success, message = db.insert_article(title, content, author_id)
-    flash(message)
     return redirect(url_for('knowledge_repository'))
+    # if success:
+    #     return jsonify({"success": True, "message": message}), 200
+    # else:
+    #     return jsonify({"success": False, "message": message}), 400
 
 @app.route('/delete-article/<int:article_id>', methods=['DELETE'])
 def delete_article(article_id):
@@ -478,6 +478,48 @@ def save_article(article_id):
 
     return jsonify({'message': 'Article updated successfully'}), 200
 
+@app.route('/mute-user')
+def mute_user():
+    username = session.get('username')
+    if not username:
+        flash('You must be logged in to access the admin panel.')
+        return redirect(url_for('login'))
+
+    user = db.get_user(username)
+    #Convert enum to string here
+    user_role = user.role.name if hasattr(user.role, 'name') else str(user.role)
+
+    if user is None or (user_role != 'ADMIN' and user_role != 'ACADEMIC' and  user_role != 'ADMINISTRATIVE'):
+        print("can't access")
+        return redirect(url_for('home'))
+    
+    users = db.get_all_users()
+    # Render an admin panel template or return relevant data
+    return render_template('mute_user.jinja', username=username, users=users)
+
+@app.route('/update_user_mute_status', methods=['POST'])
+def update_user_mute_status():
+    username = request.form.get('username')
+    new_status = request.form.get('new_status')
+
+    if not username:
+        return jsonify({"error": "Username is required"}), 400
+    if not new_status:
+        return jsonify({"error": "New status is required"}), 400
+    if new_status not in ['true', 'false']:
+        return jsonify({"error": "Invalid new status value"}), 400
+
+    # Convert new_status to boolean
+    new_status_bool = new_status == 'true'
+
+    try:
+        success = db.mute_user(username, new_status_bool)
+        if success:
+            return jsonify({"success": True, "message": f"User {'muted' if new_status_bool else 'unmuted'} successfully."})
+        else:
+            return jsonify({"success": False, "message": "Failed to update user status"}), 400
+    except Exception as e:
+        return jsonify({"success": False, "message": f"An error occurred: {str(e)}"}), 500
 
 if __name__ == '__main__':
     # socketio.run(app)
