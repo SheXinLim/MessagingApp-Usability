@@ -466,6 +466,14 @@ def save_article(article_id):
         return jsonify({'message': message}), 400
 
     return jsonify({'message': 'Article updated successfully'}), 200
+
+@app.template_filter('safe_role_name')
+def safe_role_name(user):
+    # Check if user and user.role both exist and have the attributes expected
+    if hasattr(user, 'role') and hasattr(user.role, 'name'):
+        return user.role.name
+    return "Unknown"  # or any other fallback string
+
 if __name__ == '__main__':
     # socketio.run(app)
     # for HTTPS Communication
