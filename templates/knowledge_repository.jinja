@@ -309,7 +309,7 @@
             {% for comment in comments %}
                 <div class="comment">
                     <p>
-                    <span class="comment-role">({{ comment.author_role }})</span>
+                    <span class="comment-role">({{ comment.author_role.value }})</span>
                     <span class="comment-author">{{ comment.author_id }}:</span>
                     <span class="comment-content">{{ comment.content }}</span>
                     </p>
