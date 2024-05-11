@@ -498,7 +498,6 @@
                 console.error('Error fetching friends:', data.error);
                 return;
             }
-            location.reload();
             const list = document.getElementById('friends-list');
             list.innerHTML = '<h2>Friends</h2><ul>';
             if (data.friends && data.friends.length > 0) {
