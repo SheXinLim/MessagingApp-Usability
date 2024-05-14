@@ -214,7 +214,7 @@ def decline_friend_request_route(request_id):
 def logout():
     session.clear()  # Clear all data from the session
     flash('You have been logged out.')
-    return redirect(url_for('login'))  # Redirect to the login page or home page
+    return redirect(url_for('index'))  # Redirect to the login page or home page
 
 @app.route('/api/friend-requests')
 def api_friend_requests():
