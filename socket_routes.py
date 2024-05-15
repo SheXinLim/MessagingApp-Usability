@@ -153,14 +153,15 @@ def send(username, message, room_id):
     # Check if the sender or receiver have joined the room
     room_members = room.get_room_members(room_id)
     
+    
     # Get the receiver's username
     receiver_name = None
     for name in room_members:
         if name != username:
             receiver_name = name
             break
-    
-    
+
+        
     if not room_members or username not in room_members:
         #message only to the sender's room
         emit("incoming", f"{username}: {message}")
@@ -175,6 +176,7 @@ def send(username, message, room_id):
         print(f"this is happening -  {username}: {message}")
 
         return
+
 
     # Check if the sender has left the room
     if user_left_status.get(username, False):
@@ -191,6 +193,80 @@ def send(username, message, room_id):
         session.commit()
 
         print(f"Encrypted message stored in the database: {username}: {message}")
+
+
+
+# @socketio.on("delete_message")
+# def delete_message(data):
+#     print("Received delete message request")
+#     message_content = data.get("message")
+#     print("Message content to delete:", message_content)
+
+#     separator_index = message_content.find(": ")
+
+#     if separator_index != -1:
+#         new_variable = message_content[separator_index + 2:]
+#         print("Extracted content:", new_variable)
+#     else:
+#         print("Colon and space (': ') not found in message content")
+
+#     try:
+#         with Session() as session:
+        
+#             message = session.query(Message).filter(Message.content == new_variable).first()
+
+#             if message:
+#                 print("deleting")
+#                 session.delete(message)
+#                 session.commit()
+#                 print("Message deleted successfully")
+#                 emit("message_deleted", message_content, broadcast=True)
+#             else:
+#                 print("Message not found in the database")
+#     except Exception as e:
+#         print("Error deleting message from database:", e)
+#         session.rollback()
+        
+@socketio.on("delete_message")
+def delete_message(data):
+    print("Received delete message request")
+    message_content = data.get("message")
+    print("Message content to delete:", message_content)
+
+    separator_index = message_content.find(": ")
+
+    if separator_index != -1:
+        content_to_delete = message_content[separator_index + 2:]
+        print("Extracted content:", content_to_delete)
+    else:
+        print("Colon and space (': ') not found in message content")
+        return
+
+    # Get the sender's username from the request context
+    sender_username = request.cookies.get("username")
+
+    try:
+        with Session() as session:
+            # Query the message based on its content
+            message = session.query(Message).filter(Message.content == content_to_delete).first()
+
+            if message:
+
+                # Check if the message belongs to the sender making the delete request
+                if message.sender_username == sender_username:
+                    session.delete(message)
+                    session.commit()
+                    print("Message deleted successfully")
+                    emit("message_deleted", message_content, broadcast=True)
+                else:
+                     print("This is not deleted in message history, you are not sender.")
+                     emit("incoming", (f"You are not the sender, message still in message history.", "red"))
+
+            else:
+                print("Message not found in the database")
+    except Exception as e:
+        print("Error deleting message from database:", e)
+        session.rollback()
 
 
 

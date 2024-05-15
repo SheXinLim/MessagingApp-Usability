@@ -336,6 +336,9 @@
         });
      
     }
+
+
+    
      
     function send() {
         let message = $("#message").val();
@@ -348,10 +351,17 @@
         socket.emit("send", username, message, room_id);  
     }
 
+
+
+   
+
+
     socket.on("incoming", (message, color="black") => {
        add_message(message, color);
     });
+  
 
+ 
     socket.on('error', function(data) {
         alert(data.message); // Show an alert with the error message
     });
@@ -381,6 +391,7 @@
             });
         }
     }
+    
 
     function startPrivateConversation(friendUsername) {
         socket.emit("join", username, friendUsername, (response) => {
@@ -415,11 +426,44 @@
 
     // function to add a message to the message box
     // called when an incoming message has reached a client
-    function add_message(message, color) {
+    {# function add_message(message, color) {
         let box = $("#message_box");
         let child = $(`<p style="color:${color}; margin: 0px;"></p>`).text(message);
         box.append(child);
+    } #}
+
+    function add_message(message, color) {
+        let box = $("#message_box");
+        let child = $(`<p style="color:${color}; margin: 0px;"></p>`).text(message);
+        // Append a delete button next to the message
+        let deleteButton = $('<button>Delete</button>');
+        deleteButton.click(() => deleteMessage(message));
+        child.append(deleteButton);
+        box.append(child);
     }
+
+    function deleteMessage(message) {
+        // Display a confirmation dialog before proceeding with deletion
+        if (confirm(`Are you sure you want to delete the message "${message}"?`)) {
+            // If user confirms deletion, proceed to delete the message
+            // from the UI (assuming successful deletion)
+            $(`p:contains('${message}')`).remove();
+            socket.emit("delete_message", { message: message });
+            
+            
+            // $('#messageList').find(`p:contains('${message}')`).remove();
+
+        }
+    } 
+
+
+   
+
+
+
+   
+
+
 
     // Function to send a friend request
     function sendFriendRequest() {
