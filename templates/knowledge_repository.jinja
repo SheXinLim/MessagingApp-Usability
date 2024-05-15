@@ -279,8 +279,8 @@
 <div class="container">
     <div class="sidebar">
         <div class="sidebar-header">
-            <h2>Articles</h2>
-            <button class="new-article" id="newArticleBtn">New Article</button>
+            <h2>Post</h2>
+            <button class="new-article" id="newArticleBtn">New Post</button>
         </div>
         {% for article in articles %}
             <div class="article-preview" onclick="location.href='{{ url_for('knowledge_repository', article_id=article.id) }}'">

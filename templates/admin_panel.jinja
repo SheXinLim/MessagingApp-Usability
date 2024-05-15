@@ -85,7 +85,7 @@
 {% for user in users %}
 <form class="role-update-form" action="{{ url_for('update_user_role') }}" method="post" onsubmit="updateUserRole(event)">
     <div>
-        <label>{{ user.username }} (Current Role: {{ user.role.name }})</label>
+        <label>{{ user.username }} (Current Role: {{ user.role.value }})</label>
         <select name="new_role">
             <option value="student" {% if user.role.name == 'STUDENT' %}selected{% endif %}>Student</option>
             <option value="academic" {% if user.role.name == 'ACADEMIC' %}selected{% endif %}>Academic</option>

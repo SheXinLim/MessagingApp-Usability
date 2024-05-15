@@ -13,7 +13,6 @@ from sqlalchemy.orm import sessionmaker
 from hashlib import sha256
 import hmac
 
-
 try:
     from __main__ import socketio
 except ImportError:
@@ -22,17 +21,10 @@ except ImportError:
 from models import Room, Message 
 
 import db
-
 room = Room()
-
 Session = sessionmaker(bind=engine)
-
-
 user_rooms = {}
-
 user_messages = {}
-
-
 user_left_status = {}
 
 @socketio.on('connect')
@@ -61,8 +53,6 @@ def connect():
     with Session() as session:
         session.add(Message(sender_username=username, content=f"{username} has connected"))
         session.commit()
-
-
 
 @socketio.on('disconnect')
 def disconnect():
