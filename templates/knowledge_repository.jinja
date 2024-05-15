@@ -244,7 +244,7 @@
 
     .comment .comment-role {
         font-size: 12px; /* Smaller font size for roles */
-        color: grey; /* Grey color for less emphasis */
+        color: black; /* Grey color for less emphasis */
     }
 
     .comment .comment-author {
@@ -287,7 +287,7 @@
                 <h3 id="sidebar-title-{{ article.id }}">{{ article.title }}</h3>
                 <p id="sidebar-content-{{ article.id }}" style="font-size: 14px; color: black; margin: 1px 0;">{{ article.content.split()[:10]|join(' ') }}...</p>
                 <!-- Author name in smaller font -->
-                <p style="font-size: 14px; color: rgb(124, 124, 124);margin: 1px 0;">{{ article.author_id }}</p>
+                <p style="font-size: 14px; color: black;margin: 1px 0;">{{ article.author_id }}</p>
             </div>
         {% endfor %}
         </div>
@@ -295,8 +295,8 @@
             {% if selected_article %}
             <h1 id="article-title-{{ selected_article.id }}">{{ selected_article.title }}</h1>
             <p id="article-content-{{ selected_article.id }}" style="font-size: 20px; color: black; ; margin: 1px 0;">{{ selected_article.content }}</p>
-            <p style="font-size: 14px; color: rgb(124, 124, 124); ; margin: 1px 0;">Author: {{ selected_article.author_id }}, Role: {{ author_role }}</p>
-            {% if user_role == 'ADMIN' or user_role == 'ACADEMIC' or user_role == 'ADMINISTRATIVE' %}
+            <p style="font-size: 14px; color:black ; ; margin: 1px 0;">Author: {{ selected_article.author_id }} Role: {{ author_role }}</p>
+            {% if username == selected_article.author_id or user_role == 'ADMIN' or user_role == 'ACADEMIC' or user_role == 'ADMINISTRATIVE' %}
                 <!-- Delete button for admin roles -->
                 <button class="button" onclick="deleteArticle({{ selected_article.id }}); event.stopPropagation();" style="vertical-align: top;">
                     Delete
@@ -390,7 +390,6 @@
             });
         });
     });
-
 
     function enableEditing(articleId) {
         const titleElement = document.getElementById(`article-title-${articleId}`);

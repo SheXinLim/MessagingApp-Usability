@@ -420,13 +420,6 @@ def delete_article(article_id):
     except Exception as e:
         return jsonify({'error': 'An error occurred', 'details': str(e)}), 500
 
-# @app.route("/add-comment/<int:article_id>", methods=["POST"])
-# def add_comment(article_id):
-#     content = request.form.get('content')
-#     author_id = session.get('username')
-#     db.insert_comment(content, article_id, author_id)  # Insert the comment
-#     return redirect(url_for('knowledge_repository', article_id=article_id))
-
 @app.route("/add-comment/<int:article_id>", methods=["POST"])
 def add_comment(article_id):
     content = request.form.get('content')
