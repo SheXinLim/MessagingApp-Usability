@@ -261,7 +261,6 @@ def delete_message(data):
                 else:
                      print("This is not deleted in message history, you are not sender.")
                      emit("incoming", (f"You are not the sender, message still in message history.", "red"))
-
             else:
                 print("Message not found in the database")
     except Exception as e:
