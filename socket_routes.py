@@ -46,21 +46,37 @@ def connect():
         # Fetch messages sent by the user
         user_messages = session.query(Message).filter((Message.sender_username == username) | (Message.receiver_username == username)).all()
 
-
-        server_messages = [
-            f"{username} has connected",
-            f"{username} has disconnected",
-            f"{username} has left the room.",
-            f"{username} has joined the room."
-        ]
-
         for message in user_messages:
-            if message.content in server_messages:
-                emit("incoming", message.content, to=room_id)
-            elif "has joined the room. Now talking to" in message.content:
-                emit("incoming", message.content, to=room_id)
-            else: 
+            if 'has connected' in message.content:
+                # If the message contains 'has connected', emit without the sender username
+                emit("incoming", f"{message.content}")
+            elif 'has disconnected' in message.content:
+                emit("incoming", f"{message.content}")
+            elif 'has left the room.' in message.content:
+                emit("incoming", f"{message.content}")
+            elif 'has joined the room.' in message.content:
+                emit("incoming", f"{message.content}")
+            elif 'has joined the room. Now talking to' in message.content:
+                emit("incoming", f"{message.content}")
+            else :
+                # Otherwise, emit with sender username
                 emit("incoming", f"{message.sender_username}: {message.content}")
+
+
+        # server_messages = [
+        #     f"{username} has connected",
+        #     f"{username} has disconnected",
+        #     f"{username} has left the room.",
+        #     f"{username} has joined the room."
+        # ]
+
+        # for message in user_messages:
+        #     if message.content in server_messages:
+        #         emit("incoming", message.content, to=room_id)
+        #     elif "has joined the room. Now talking to" in message.content:
+        #         emit("incoming", message.content, to=room_id)
+        #     else: 
+        #         emit("incoming", f"{message.sender_username}: {message.content}")
 
     emit("incoming", (f"{username} has connected", "green"), to=room_id)
 
@@ -160,7 +176,6 @@ def join(sender_name, receiver_name):
 
 @socketio.on("send")
 def send(username, message, room_id):
-# def send(username, receiver, message, room_id):
     if username not in joined_users:
         return "You must join a room before sending messages."
 
@@ -202,7 +217,12 @@ def send(username, message, room_id):
 
     
     with Session() as session:  # Create a session instance
-        new_message = Message(sender_username=username, receiver_username=receiver_name, content=message)
+        if receiver_name == username:
+            new_message = Message(sender_username=receiver_name, receiver_username=username, content=message)
+        else:
+            new_message = Message(sender_username=username, receiver_username=receiver_name, content=message)
+        
+        # new_message = Message(sender_username=username, receiver_username=receiver_name, content=message)
         session.add(new_message)
         session.commit()
 
@@ -210,36 +230,10 @@ def send(username, message, room_id):
 
 
 
-# @socketio.on("delete_message")
-# def delete_message(data):
-#     print("Received delete message request")
-#     message_content = data.get("message")
-#     print("Message content to delete:", message_content)
 
-#     separator_index = message_content.find(": ")
 
-#     if separator_index != -1:
-#         new_variable = message_content[separator_index + 2:]
-#         print("Extracted content:", new_variable)
-#     else:
-#         print("Colon and space (': ') not found in message content")
 
-#     try:
-#         with Session() as session:
-        
-#             message = session.query(Message).filter(Message.content == new_variable).first()
 
-#             if message:
-#                 print("deleting")
-#                 session.delete(message)
-#                 session.commit()
-#                 print("Message deleted successfully")
-#                 emit("message_deleted", message_content, broadcast=True)
-#             else:
-#                 print("Message not found in the database")
-#     except Exception as e:
-#         print("Error deleting message from database:", e)
-#         session.rollback()
         
 @socketio.on("delete_message")
 def delete_message(data):
@@ -307,3 +301,15 @@ def leave(username, room_id):
 
     leave_room(room_id)
     room.leave_room(username)
+
+
+# style
+# and end style
+
+
+    # #chat_box {
+    #     margin-top: 50px; /* Adjust the value as needed */
+    # }
+    # #input_box {
+    #     margin-top: 50px; /* Adjust the value as needed */
+    # } 
