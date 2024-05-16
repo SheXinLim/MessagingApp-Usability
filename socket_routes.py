@@ -45,8 +45,22 @@ def connect():
 
         # Fetch messages sent by the user
         user_messages = session.query(Message).filter((Message.sender_username == username) | (Message.receiver_username == username)).all()
+
+
+        server_messages = [
+            f"{username} has connected",
+            f"{username} has disconnected",
+            f"{username} has left the room.",
+            f"{username} has joined the room."
+        ]
+
         for message in user_messages:
-            emit("incoming", f"{message.sender_username}: {message.content}")
+            if message.content in server_messages:
+                emit("incoming", message.content, to=room_id)
+            elif "has joined the room. Now talking to" in message.content:
+                emit("incoming", message.content, to=room_id)
+            else: 
+                emit("incoming", f"{message.sender_username}: {message.content}")
 
     emit("incoming", (f"{username} has connected", "green"), to=room_id)
 

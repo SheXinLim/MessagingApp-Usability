@@ -432,7 +432,7 @@
         box.append(child);
     } #}
 
-    function add_message(message, color) {
+    {# function add_message(message, color) {
         let box = $("#message_box");
         let child = $(`<p style="color:${color}; margin: 0px;"></p>`).text(message);
         // Append a delete button next to the message
@@ -440,7 +440,30 @@
         deleteButton.click(() => deleteMessage(message));
         child.append(deleteButton);
         box.append(child);
+    } #}
+
+    function add_message(message, color) {
+        let box = $("#message_box");
+        let child = $(`<p style="color:${color}; margin: 0px;"></p>`).text(message);
+
+        // Check if the message is from the server and should not have a delete button
+        if (
+            !message.includes("has left the room.") &&
+            !message.includes("has connected") &&
+            !message.includes("has joined the room.") &&
+            !message.includes("Now talking to") &&
+            !message.includes("You have been muted and cannot join the room") &&
+            !message.includes("has disconnected")
+        ) {
+            // Append a delete button only if the message is not from the server
+            let deleteButton = $('<button>Delete</button>');
+            deleteButton.click(() => deleteMessage(message));
+            child.append(deleteButton);
+        }
+        
+        box.append(child);
     }
+
 
     function deleteMessage(message) {
         // Display a confirmation dialog before proceeding with deletion
