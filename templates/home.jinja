@@ -18,7 +18,8 @@
 
     h1 {
         text-align: center;  /* Center the heading text horizontally */
-        font-family: 'Open Sans', sans-serif;
+        font-family: 'Pacifico', cursive;
+        color: #4B0082;  /* Changed text color to indigo */
         display: flex; /* Use Flexbox inside h1 */
         justify-content: space-between; /* Spread items along the main axis */
 
@@ -28,7 +29,7 @@
 
     p {
         font-family: 'Open Sans', sans-serif;
-        color: black; /* Ensure text is readable on background */
+        color: #4B0082; /* Ensure text is readable on background */
         font-size: 20px;
         font-weight: bold;  /* Make text bold */
     }
@@ -50,7 +51,7 @@
         width: 1160px; 
         overflow: auto;
         padding: 2px;
-        background-color: whitesmoke; 
+        background-color: seashell; 
     }
 
     #friends-list {
@@ -418,23 +419,7 @@
         $("#chat_box").show();
     }
 
-    // function to add a message to the message box
-    // called when an incoming message has reached a client
-    {# function add_message(message, color) {
-        let box = $("#message_box");
-        let child = $(`<p style="color:${color}; margin: 0px;"></p>`).text(message);
-        box.append(child);
-    } #}
-
-    {# function add_message(message, color) {
-        let box = $("#message_box");
-        let child = $(`<p style="color:${color}; margin: 0px;"></p>`).text(message);
-        // Append a delete button next to the message
-        let deleteButton = $('<button>Delete</button>');
-        deleteButton.click(() => deleteMessage(message));
-        child.append(deleteButton);
-        box.append(child);
-    } #}
+  
 
     function add_message(message, color) {
         let box = $("#message_box");
@@ -447,7 +432,8 @@
             !message.includes("has joined the room.") &&
             !message.includes("Now talking to") &&
             !message.includes("You have been muted and cannot join the room") &&
-            !message.includes("has disconnected")
+            !message.includes("has disconnected") &&
+            !message.includes("are not the sender")
         ) {
             // Append a delete button only if the message is not from the server
             let deleteButton = $('<button>Delete</button>');
