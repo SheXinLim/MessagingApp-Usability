@@ -295,7 +295,12 @@
             {% if selected_article %}
             <h1 id="article-title-{{ selected_article.id }}">{{ selected_article.title }}</h1>
             <p id="article-content-{{ selected_article.id }}" style="font-size: 20px; color: black; ; margin: 1px 0;">{{ selected_article.content }}</p>
-            <p style="font-size: 14px; color:black ; ; margin: 1px 0;">Author: {{ selected_article.author_id }} Role: {{ author_role }}</p>
+            <p style="margin-top:5px; font-size: 14px; color: black; margin: 1px 0;font-weight: 680;">
+                <span style="padding-right: 10px;">Author: {{ selected_article.author_id}}</span>
+                <span style="padding-right: 10px;"> Role: {{ author_role }}</span>
+
+            </p>
+
             {% if username == selected_article.author_id or user_role == 'ADMIN' or user_role == 'ACADEMIC' or user_role == 'ADMINISTRATIVE' %}
                 <!-- Delete button for admin roles -->
                 <button class="button" onclick="deleteArticle({{ selected_article.id }}); event.stopPropagation();" style="vertical-align: top;">
@@ -431,7 +436,7 @@
                 }
                 if (sidebarContentElement) {
                     // Update with the first 30 words of the new content
-                    sidebarContentElement.innerText = editedContent.split(' ').slice(0, 30).join(' ') + '...';
+                    sidebarContentElement.innerText = editedContent.split(' ').slice(0, 10).join(' ') + '...';
                 }
             }
         })
