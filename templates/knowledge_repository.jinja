@@ -446,12 +446,12 @@
     function deleteArticle(articleId) {
         if (confirm('Are you sure you want to delete this article?')) {
             fetch(`/delete-article/${articleId}`, { method: 'DELETE' })
-                .then(response => {
-                    if (response.ok) {
-                        alert('Article deleted successfully.');
-                        location.reload(); // Optionally reload the page or remove the article element from the DOM
-                    } else {
-                        throw new Error('Failed to delete the article.');
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message); // Display the message from the server
+                    if (data.success) {
+                        location.reload(); 
+                        
                     }
                 })
                 .catch(error => {

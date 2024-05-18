@@ -412,13 +412,18 @@ def add_article():
 @app.route('/delete-article/<int:article_id>', methods=['DELETE'])
 def delete_article(article_id):
     try:
+        # First, delete the comments associated with the article
+        success_comments = db.delete_comments_by_article_id(article_id)
+        if not success_comments:
+            return jsonify({'message': 'Failed to delete comments for the article'}), 400
         success = db.delete_article(article_id)
         if success:
-            return jsonify({'message': 'Article deleted successfully'}), 200
+            return jsonify({"success": True, 'message': 'Article deleted successfully'}), 200
         else:
-            return jsonify({'error': 'Article not found or could not be deleted'}), 404
+            return jsonify({"success": False, 'message': 'Article not found or could not be deleted'}), 404
     except Exception as e:
-        return jsonify({'error': 'An error occurred', 'details': str(e)}), 500
+        return jsonify({'message': 'An error occurred', 'details': str(e)}), 500
+
 
 @app.route("/add-comment/<int:article_id>", methods=["POST"])
 def add_comment(article_id):
