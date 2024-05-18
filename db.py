@@ -340,6 +340,21 @@ def delete_comment_db(comment_id):
             session.rollback()
             return False, f"An error occurred: {str(e)}"
 
+def delete_comments_by_article_id(article_id):
+    with Session(engine) as session:
+        try:
+            # Query to find all comments related to the article ID
+            comments_to_delete = session.query(Comment).filter(Comment.article_id == article_id).all()
+            for comment in comments_to_delete:
+                session.delete(comment)
+            session.commit()  # Commit the transaction to delete the records
+            return True
+        except Exception as e:
+            session.rollback()  # Roll back the transaction on error
+            print(f"Error deleting comments: {e}")
+            return False
+        finally:
+            session.close()
 
 def get_article(article_id):
     with Session(engine) as session:
