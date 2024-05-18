@@ -89,7 +89,7 @@
         <form class="mute-update-form" action="{{ url_for('update_user_mute_status') }}" method="post" onsubmit="updateUserMuteStatus(event)">
             <div>
                 
-                <label>{{ user.username }} (Current Status: {{ 'Muted' if user.muted else 'Unmuted' }})</label>
+                <label>{{ user.username }} (Current Status: {{ 'Muted' if user.muted else 'Not muted' }})</label>
                 <select name="new_status">
                     <option value="true" {% if user.muted == false %}selected{% endif %}>mute</option>
                     <option value="false" {% if user.muted == true %}selected{% endif %}>unmute</option>
