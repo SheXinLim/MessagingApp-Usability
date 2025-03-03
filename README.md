@@ -34,7 +34,7 @@ http://127.0.0.1:5000
 ---
 
 ## **🌟 Features**
-### **🔹 Messaging & Friends List Enhancements **
+### **Messaging & Friends List Enhancements**
 - **Enhanced UI/UX** for better usability.
 - **Friends list improvements**:
   - Shows **online/offline status** and **account role** (Student, Staff, etc.).
@@ -42,7 +42,7 @@ http://127.0.0.1:5000
 - **Offline Messaging Support**:
   - Messages sent while offline will be **stored** and loaded upon next login.
 
-### **🔹 Knowledge Repository **
+### **Knowledge Repository**
 A shared space for students and staff to **contribute and discuss academic materials**.
 - **Users can create and edit articles**.
 - **Staff can delete or modify all articles**.
@@ -52,17 +52,17 @@ A shared space for students and staff to **contribute and discuss academic mater
 - **User moderation**:
   - Staff can **mute/unmute users**, restricting their ability to post or chat.
   
-### **🔹 Group Chat & Chatroom Features **
+### **Group Chat & Chatroom Features**
 - Chatrooms now support **more than 2 users**, enabling group discussions.
 
-### **🔹 Role-Based Access Control **
+### **Role-Based Access Control**
 - Users have different **permissions** based on their role:
   - **Student**
   - **Staff** (Academics, Administrative Staff, Admin)
 - Role is displayed in **profiles and posts**.
 
 
-### **🔹 Additional Features (5 marks)**
+### **Additional Features**
 - Custom **user function** based on **user research findings**.
 
 ---
