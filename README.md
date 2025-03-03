@@ -5,7 +5,7 @@
 ## **Overview**
 This project is a end-to-end (E2E) secure messaging app providing website support system for undergraduate students at the School of Computer Science, University of Sydney. The platform enables students to share experiences, seek academic help, and contribute to a knowledge repository of useful study materials.
 
-Main features include **real-time secure messaging**, a** friends system**, **chatroom** support for more than two users, a **knowledge repository** for posts, and a comment system similar to a forum.
+Main features include **real-time secure messaging**, a **friends system**, **chatroom** support for more than two users, a **knowledge repository** for posts, and a comment system similar to a forum.
 
 The main technology driving this application is socket.io, which allows two-way real-time communication between the client and server through "socket events." The system includes a messaging and friends system, along with features to improve usability, collaboration, and role-based access control.
 
